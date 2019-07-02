@@ -8,6 +8,9 @@ var apiUrl = "{{ .Param "api_url" }}";
 var mapboxToken = "{{ .Param "mapbox_token" }}";
 
 function initMap() {
+  var locale = window.navigator.userLanguage || window.navigator.language;
+  moment.locale(locale);
+
   ajaxRequest = GetXmlHttpObject();
   if (ajaxRequest == null) {
     return;
@@ -145,6 +148,7 @@ function stateChanged() {
     if (lm) {
       popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
       popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
+      popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
     }
     stationMarker.bindPopup(popupText);
 
@@ -178,7 +182,7 @@ function getTextColor(aqi) {
   if (aqi < 51) {
     return 'white';
   } else if (aqi < 101) {
-    return 'blue';
+    return 'black';
   }
   return "white";
 }
