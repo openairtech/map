@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{{ .Title }}</title>
+  <meta charset="utf-8" />
+  <link rel='shortcut icon' type='image/x-icon' href='favicon.ico' />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font-Awesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+  <!-- Leaflet.Locate -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.67.0/dist/L.Control.Locate.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@0.67.0/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+  <!-- Leaflet.BeautifyMarkers plugin -->
+  <link rel="stylesheet" type="text/css" href="css/leaflet-beautify-marker-icon.css">
+  <script type="text/javascript" src="js/leaflet-beautify-marker-icon.js"></script>
+  <!-- Leaflet.RestoreView plugin -->
+  <script type='text/javascript' src="js/leaflet.restoreview.js"></script>
+  <!-- OpenAir -->
+  {{ $openair_css := resources.Get "css/openair.css" | fingerprint -}}
+  <link rel="stylesheet" href="{{ $openair_css.Permalink }}" integrity="{{ $openair_css.Data.Integrity }}">
+  {{ $openair_js := resources.Get "js/openair.js" | resources.ExecuteAsTemplate "js/openair.js" . | fingerprint -}}
+  <script type="text/javascript" src="{{ $openair_js.Permalink }}" integrity="{{ $openair_js.Data.Integrity }}" crossorigin=""></script>
+</head>
+
+<body onload="initMap();">
+  <noscript>
+    <p id="enable-js">Для просмотра карты, пожалуйста, включите JavaScript в настройках Вашего браузера.</p>
+    <p id="enable-js">Please enable JavaScript in your browser for map viewing.</p>
+  </noscript>
+  <div id="map"></div>
+</body>
+
+</html>
