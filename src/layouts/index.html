@@ -21,6 +21,8 @@
   <script type="text/javascript" src="js/leaflet-beautify-marker-icon.js"></script>
   <!-- Leaflet.RestoreView plugin -->
   <script type='text/javascript' src="js/leaflet.restoreview.js"></script>
+  <!-- Leaflet.Permalink plugin -->
+  <script type='text/javascript' src="js/leaflet.permalink.min.js"></script>
   <!-- OpenAir -->
   {{ $openair_css := resources.Get "css/openair.css" | fingerprint -}}
   <link rel="stylesheet" href="{{ $openair_css.Permalink }}" integrity="{{ $openair_css.Data.Integrity }}">

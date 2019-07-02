@@ -29,9 +29,15 @@ function initMap() {
     }
   }).addTo(map);
 
-  if (!map.restoreView()) {
-    map.setView([48.70914450731946, 44.506645202636726], 13);
+  var mapCenter = [48.709144, 44.506645];
+  var mapZoom = 13;
+  if (map.restoreView()) {
+    mapCenter = map.getCenter();
+    mapZoom = map.getZoom();
   }
+  var pml = L.Permalink.getMapLocation(mapZoom, mapCenter);
+  map.setView(pml.center, pml.zoom);
+  L.Permalink.setup(map);
 
   L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxToken, {
     maxZoom: 18,
