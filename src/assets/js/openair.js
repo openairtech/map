@@ -188,8 +188,6 @@ function getMarkerColor(aqi) {
 function getTextColor(aqi) {
   if (aqi < 51) {
     return 'white';
-  } else if (aqi < 101) {
-    return 'black';
   }
-  return "white";
+  return "black";
 }
