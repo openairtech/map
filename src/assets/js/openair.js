@@ -291,7 +291,7 @@ function stateChanged() {
 
     map.addLayer(stationMarker);
 
-    var popupText = "<h3>" + station.desc + "</h3>";
+    var popupText = "<h6>" + station.desc + "</h6>";
     if (lm) {
       popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
       popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
