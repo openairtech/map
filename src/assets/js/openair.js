@@ -1,7 +1,14 @@
 var map;
 var ajaxRequest;
 var plotLayers = [];
-var refreshTimer;
+
+var timers = {};
+
+const TIMELINE_STEP = 10 * 60; // in seconds
+const TIMELINE_LENGTH = 24 * 60 * 60 - TIMELINE_STEP; // in seconds
+
+var mapDate = null;
+var mapTime = null;
 
 //var apiUrl = "{{ if eq hugo.Environment "production" }}{{ .Param "api_production" }}{{ else }}{{ .Param "api_dev" }}{{ end }}";
 var apiUrl = "{{ .Param "api_url" }}";
@@ -41,15 +48,135 @@ function initMap() {
 
   L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxToken, {
     maxZoom: 18,
-    attribution: 'Air quality data &copy; <a href="https://github.com/openairtech">OpenAir</a>, ' +
+    attribution: 'Sensor data &copy; <a href="https://github.com/openairtech">OpenAir</a>, ' +
       'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
       '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
       'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     id: 'mapbox.streets'
   }).addTo(map);
 
+  initTimeController();
+
   updateMap();
   map.on('moveend', onMapMove);
+}
+
+function initTimeController() {
+  $('#time-slider').slider({
+    min: -TIMELINE_LENGTH,
+    max: 0,
+    step: TIMELINE_STEP,
+    value: 0,
+    slide: function(event, ui) {
+      timeSliderChanged(event, ui);
+    },
+    change: function(event, ui) {
+      timeSliderChanged(event, ui);
+    },
+    create: function (event, ui) {
+      timeSliderCreated(event, ui);
+    }
+  });
+
+  var datepicker = $('#time-datepicker');
+  datepicker.datepicker({
+    endDate: '+0d',
+    todayHighlight: true,
+    language: 'ru'
+  });
+  datepicker.datepicker('setDate', new Date());
+  datepicker.on('changeDate', function(e) {
+    timeDatepickerChanged(e);
+  });
+
+  $("#time-fast-forward").click(function(event) {
+    $('#time-datepicker').datepicker('setDate', new Date());
+    $(this).blur();
+    event.preventDefault();
+  });
+  $("#time-step-forward").click(function(event) {
+    var slider = $('#time-slider');
+    var val = slider.slider('value');
+    var max = slider.slider('option', 'max');
+    var step = slider.slider('option', 'step');
+    var nextVal = val + step;
+    if (nextVal <= max) {
+      slider.slider('value', nextVal);
+    }
+    $(this).blur();
+    event.preventDefault();
+  });
+  $("#time-step-backward").click(function(event) {
+    var slider = $('#time-slider');
+    var val = slider.slider('value');
+    var min = slider.slider('option', 'min');
+    var step = slider.slider('option', 'step');
+    var nextVal = val - step;
+    if (nextVal >= min) {
+      slider.slider('value', nextVal);
+    }
+    $(this).blur();
+    event.preventDefault();
+  });
+}
+
+function timeDatepickerChanged(e) {
+  var date = $('#time-datepicker').datepicker('getDate');
+  if (!date || !moment(date).isBefore(new Date(), "day")) {
+    // Today's date is selected
+    mapDate = null;
+    $('#time-slider').slider('value', 0); // slide slider to now
+  } else {
+    // Selected date is in the past
+    mapDate = date;
+    var slider = $('#time-slider');
+    var min = slider.slider('option', 'min');
+    slider.slider('value', min); // slide slider to start of day
+  }
+  if (e.date) {
+    $('#time-date-icon').trigger('click'); // hide datepicker
+  }
+}
+
+function timeSliderCreated(event, ui) {
+    var handles = $(event.target).find('span');
+    handles.eq(0).tooltip({
+        animation: false,
+        placement: 'top',
+        trigger: 'manual',
+        container: handles.eq(0),
+        title: ''
+    });
+}
+
+function timeSliderChanged(event, ui) {
+  if (!mapDate && ui.value == 0) {
+    // Set time to now
+    mapTime = null;
+    var sliderTooltip = "Сейчас";
+    scheduleTimer('tooltip_hide', function () {
+      $(ui.handle).tooltip('hide');
+    }, 1000);
+  } else {
+    cancelRefreshTimer();
+    cancelTimer('tooltip_hide');
+    if (mapDate) {
+      // Calc slider end time as end of picked date
+      var sliderEndTime = moment(mapDate).add(TIMELINE_LENGTH, 'seconds').unix();
+    } else {
+      // Calc slider end time from current time rounded to tens in minutes
+      var sliderEndTime = Math.ceil(moment().unix() / TIMELINE_STEP) * TIMELINE_STEP;
+    }
+    var sliderTime = moment.unix(sliderEndTime).add(ui.value, 'seconds');
+    var sliderTooltip = sliderTime.format('lll');
+    mapTime = sliderTime.unix();
+  }
+  // Update tooltip
+  scheduleTimer('tooltip_update', function () {
+    $(ui.handle).attr('title', sliderTooltip).tooltip('_fixTitle').tooltip('show');
+  }, 0);
+  // Schedule map update according to updated time
+  scheduleTimer('time_updated', updateMap, 250);
 }
 
 function updateMap() {
@@ -58,6 +185,9 @@ function updateMap() {
   var minll = bounds.getSouthWest();
   var maxll = bounds.getNorthEast();
   var url = apiUrl + '/stations?bbox=' + minll.lng + ',' + minll.lat + ',' + maxll.lng + ',' + maxll.lat;
+  if (mapTime) {
+    url += '&mfrom=' + mapTime;
+  }
   url += '&mlast=3h';
   ajaxRequest.onreadystatechange = stateChanged;
   ajaxRequest.open('GET', url, true);
@@ -79,18 +209,28 @@ function GetXmlHttpObject() {
 }
 
 function cancelRefreshTimer() {
-  if (refreshTimer) {
-    clearTimeout(refreshTimer);
-  }
+  cancelTimer('refresh');
 }
 
 function scheduleRefreshTimer() {
   cancelRefreshTimer();
-  refreshTimer = setTimeout(updateMap, "{{ .Param "refresh_period" }}");
+  scheduleTimer('refresh', updateMap, "{{ .Param "refresh_period" }}");
+}
+
+function cancelTimer(timer) {
+  clearTimeout(timers[timer]);
+}
+
+function scheduleTimer(timer, fn, timeout) {
+  cancelTimer(timer);
+  timers[timer] = setTimeout(fn, timeout);
 }
 
 function stateChanged() {
-  scheduleRefreshTimer();
+  if (!mapTime) {
+    scheduleRefreshTimer();
+  }
+
   if (ajaxRequest.readyState != 4) {
     return;
   }
