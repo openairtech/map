@@ -91,7 +91,9 @@ function initTimeController() {
 
   $("#time-fast-forward").click(function(event) {
     $('#time-datepicker').datepicker('setDate', new Date());
-    $(this).blur();
+    scheduleTimer('time_ff_blur', function () {
+      $("#time-fast-forward").blur();
+    }, 0);
     event.preventDefault();
   });
   $("#time-step-forward").click(function(event) {
@@ -103,7 +105,9 @@ function initTimeController() {
     if (nextVal <= max) {
       slider.slider('value', nextVal);
     }
-    $(this).blur();
+    scheduleTimer('time_sf_blur', function () {
+      $("#time-step-forward").blur();
+    }, 0);
     event.preventDefault();
   });
   $("#time-step-backward").click(function(event) {
@@ -115,7 +119,9 @@ function initTimeController() {
     if (nextVal >= min) {
       slider.slider('value', nextVal);
     }
-    $(this).blur();
+    scheduleTimer('time_sb_blur', function () {
+      $("#time-step-backward").blur();
+    }, 0);
     event.preventDefault();
   });
 }
