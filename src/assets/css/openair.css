@@ -28,12 +28,16 @@ html, body, #map {
   background-image: linear-gradient(top, #ffffff, #e6e6e6);
   background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
   background-repeat: repeat-x;
-  border-right: 1px solid #d4d4d4;
+  border: 1px solid #d4d4d4;
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
   -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
-  border-radius: 5px !important;
-  -moz-border-radius: 5px !important;
+  border-radius: 2em !important;
+  -moz-border-radius: 2em !important;
+}
+
+#navbar-logo {
+  vertical-align: top;
 }
 
 .ui-slider-horizontal {
