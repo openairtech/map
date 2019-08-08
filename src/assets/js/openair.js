@@ -9,6 +9,7 @@ const TIMELINE_LENGTH = 24 * 60 * 60 - TIMELINE_STEP; // in seconds
 
 var mapDate = null;
 var mapTime = null;
+var sliderEndTime = null;
 
 //var apiUrl = "{{ if eq hugo.Environment "production" }}{{ .Param "api_production" }}{{ else }}{{ .Param "api_dev" }}{{ end }}";
 var apiUrl = "{{ .Param "api_url" }}";
@@ -84,13 +85,12 @@ function initTimeController() {
     todayHighlight: true,
     language: 'ru'
   });
-  datepicker.datepicker('setDate', new Date());
   datepicker.on('changeDate', function(e) {
     timeDatepickerChanged(e);
   });
 
   $("#time-fast-forward").click(function(event) {
-    $('#time-datepicker').datepicker('setDate', new Date());
+    $('#time-datepicker').datepicker('setDate', '');
     scheduleTimer('time_ff_blur', function () {
       $("#time-fast-forward").blur();
     }, 0);
@@ -99,11 +99,28 @@ function initTimeController() {
   $("#time-step-forward").click(function(event) {
     var slider = $('#time-slider');
     var val = slider.slider('value');
+    var min = slider.slider('option', 'min');
     var max = slider.slider('option', 'max');
     var step = slider.slider('option', 'step');
     var nextVal = val + step;
     if (nextVal <= max) {
       slider.slider('value', nextVal);
+    } else if (mapDate) {
+      // Jump to the next day
+      mapDate.add(1, 'day');
+      if (mapDate.isBefore(new Date(), "day")) {
+        // Next day is not today
+        slider.slider('value', min);
+      } else {
+        // Next day is today
+        sliderEndTime = getRoundedTimeNow();
+        nextVal = max - moment(sliderEndTime)
+          .subtract(mapDate.unix(), 'seconds').unix();
+        mapDate = null; // today
+        slider.slider('value', nextVal);
+      }
+    } else {
+        slider.slider('value', max);
     }
     scheduleTimer('time_sf_blur', function () {
       $("#time-step-forward").blur();
@@ -114,9 +131,21 @@ function initTimeController() {
     var slider = $('#time-slider');
     var val = slider.slider('value');
     var min = slider.slider('option', 'min');
+    var max = slider.slider('option', 'max');
     var step = slider.slider('option', 'step');
     var nextVal = val - step;
     if (nextVal >= min) {
+      slider.slider('value', nextVal);
+    } else if (mapDate) {
+      // Jump to the day before which is not yesterday
+      mapDate.subtract(1, 'day');
+      slider.slider('value', max);
+    } else {
+      // Jump to yesterday
+      mapDate = moment(sliderEndTime).subtract(1, 'day').startOf('day');
+      nextVal = min + moment(sliderEndTime)
+        .subtract(1, 'day')
+        .subtract(mapDate.unix(), 'seconds').unix();
       slider.slider('value', nextVal);
     }
     scheduleTimer('time_sb_blur', function () {
@@ -124,23 +153,36 @@ function initTimeController() {
     }, 0);
     event.preventDefault();
   });
+
+  $('#time-date-dropup').on('show.bs.dropdown', function () {
+    timeDatepickerShow();
+  })
+}
+
+function timeDatepickerShow() {
+  var datepicker = $('#time-datepicker');
+  if (mapDate) {
+    datepicker.datepicker('update', new Date(mapDate));
+  } else {
+    datepicker.datepicker('update', new Date());
+  }
 }
 
 function timeDatepickerChanged(e) {
   var date = $('#time-datepicker').datepicker('getDate');
   if (!date || !moment(date).isBefore(new Date(), "day")) {
-    // Today's date is selected
+    // Today's day is selected
     mapDate = null;
     $('#time-slider').slider('value', 0); // slide slider to now
   } else {
-    // Selected date is in the past
-    mapDate = date;
+    // Selected day is in the past (yesterday or earlier)
+    mapDate = moment(date);
     var slider = $('#time-slider');
     var min = slider.slider('option', 'min');
-    slider.slider('value', min); // slide slider to start of day
+    slider.slider('value', min); // slide slider to start of the day
   }
   if (e.date) {
-    $('#time-date-icon').trigger('click'); // hide datepicker
+    $('#time-date-dropup').trigger('click'); // hide datepicker
   }
 }
 
@@ -157,8 +199,9 @@ function timeSliderCreated(event, ui) {
 
 function timeSliderChanged(event, ui) {
   if (!mapDate && ui.value == 0) {
-    // Set time to now
-    mapTime = null;
+    // Rewind time to now
+    mapTime = null; // now
+    sliderEndTime = null; // now
     var sliderTooltip = "Сейчас";
     scheduleTimer('tooltip_hide', function () {
       $(ui.handle).tooltip('hide');
@@ -167,13 +210,15 @@ function timeSliderChanged(event, ui) {
     cancelRefreshTimer();
     cancelTimer('tooltip_hide');
     if (mapDate) {
-      // Calc slider end time as end of picked date
-      var sliderEndTime = moment(mapDate).add(TIMELINE_LENGTH, 'seconds').unix();
-    } else {
-      // Calc slider end time from current time rounded to tens in minutes
-      var sliderEndTime = Math.ceil(moment().unix() / TIMELINE_STEP) * TIMELINE_STEP;
+      // Browsing past day (yesterday or earlier)
+      // Set slider end time to the end of that day
+      sliderEndTime = moment(mapDate).add(TIMELINE_LENGTH, 'seconds');
+    } else if (!sliderEndTime) {
+      // Browsing today's day
+      // Set slider end time to the now time rounded to step
+      sliderEndTime = getRoundedTimeNow();
     }
-    var sliderTime = moment.unix(sliderEndTime).add(ui.value, 'seconds');
+    var sliderTime = moment(sliderEndTime).add(ui.value, 'seconds');
     var sliderTooltip = sliderTime.format('lll');
     mapTime = sliderTime.unix();
   }
@@ -183,6 +228,10 @@ function timeSliderChanged(event, ui) {
   }, 0);
   // Schedule map update according to updated time
   scheduleTimer('time_updated', updateMap, 250);
+}
+
+function getRoundedTimeNow() {
+  return moment.unix(Math.ceil(moment().unix() / TIMELINE_STEP) * TIMELINE_STEP);
 }
 
 function updateMap() {
