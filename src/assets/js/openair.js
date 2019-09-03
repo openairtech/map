@@ -13,7 +13,6 @@ var sliderEndTime = null;
 
 var shouldUpdatePermalink = true;
 
-//var apiUrl = "{{ if eq hugo.Environment "production" }}{{ .Param "api_production" }}{{ else }}{{ .Param "api_dev" }}{{ end }}";
 var apiUrl = "{{ .Param "api_url" }}";
 var mapboxToken = "{{ .Param "mapbox_token" }}";
 
@@ -442,7 +441,19 @@ function stateChanged() {
     if (lm) {
       popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
       popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
-      popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
+      if (mapTime) {
+        popupText += "Время: " + moment.unix(lm.timestamp).format('lll');
+      } else {
+        popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
+      }
+    } else {
+      popupText += "Нет данных";
+      if (station.seen) {
+        var stationSeen = moment.unix(station.seen);
+        if (!mapTime || moment.unix(mapTime).isAfter(stationSeen)) {
+          popupText += " с " + stationSeen.format('lll');
+        }
+      }
     }
     stationMarker.bindPopup(popupText);
 

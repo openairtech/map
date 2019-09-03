@@ -5,6 +5,7 @@ disableKinds=[ "RSS", "sitemap", "taxonomyTerm" ]
 publishDir = "../release"
 
 [params]
-    api_url = "https://api.openair.city/v1" # "http://localhost:8081/v1"
+    # api_url = "http://localhost:8081/v1"
+    api_url = "https://api.openair.city/v1"
     mapbox_token = "pk.eyJ1IjoiM2NreSIsImEiOiJjancwYnM4NzIwOG43M3lzMnljZGppbmo5In0.Mtp-J2o-f_5c4qs-X6kCOQ"
     refresh_period = "30000" # im milliseconds
