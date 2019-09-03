@@ -11,6 +11,8 @@ var mapDate = null;
 var mapTime = null;
 var sliderEndTime = null;
 
+var shouldUpdatePermalink = true;
+
 //var apiUrl = "{{ if eq hugo.Environment "production" }}{{ .Param "api_production" }}{{ else }}{{ .Param "api_dev" }}{{ end }}";
 var apiUrl = "{{ .Param "api_url" }}";
 var mapboxToken = "{{ .Param "mapbox_token" }}";
@@ -43,9 +45,14 @@ function initMap() {
     mapCenter = map.getCenter();
     mapZoom = map.getZoom();
   }
-  var pml = L.Permalink.getMapLocation(mapZoom, mapCenter);
+
+  var pml = getPermalinkData(mapZoom, mapCenter, 0);
+  setupPermalink(map);
+
+  initTimeController();
+
+  setMapTime(pml.time);
   map.setView(pml.center, pml.zoom);
-  L.Permalink.setup(map);
 
   L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxToken, {
     maxZoom: 18,
@@ -56,10 +63,65 @@ function initMap() {
     id: 'mapbox.streets'
   }).addTo(map);
 
-  initTimeController();
-
-  updateMap();
   map.on('moveend', onMapMove);
+}
+
+function getPermalinkData(zoom, center, time) {
+  if (window.location.hash !== '') {
+    var hash = window.location.hash.replace('#', '');
+    var parts = hash.split(',');
+    if (parts.length >= 3) {
+      center = {
+        lat: parseFloat(parts[0]),
+        lng: parseFloat(parts[1])
+      };
+      zoom = parseInt(parts[2].slice(0, -1), 10);
+      if (parts.length >= 4) {
+        time = parseInt(parts[3].slice(0, -1), 10);
+      }
+    }
+  }
+  return {
+    zoom: zoom,
+    center: center,
+    time: time
+  };
+}
+
+function updatePermalink() {
+  if (!shouldUpdatePermalink) {
+    // Do not update the URL when the view was changed in the 'popstate'
+    // handler (browser history navigation)
+    shouldUpdatePermalink = true;
+    return;
+  }
+  var center = map.getCenter();
+  var hash = '#' +
+    Math.round(center.lat * 100000) / 100000 + ',' +
+    Math.round(center.lng * 100000) / 100000 + ',' +
+    map.getZoom() + 'z';
+  if (mapTime) {
+    hash += ',' + mapTime + 't';
+  }
+  var state = {
+    zoom: map.getZoom(),
+    center: center,
+    time: mapTime
+  };
+  window.history.pushState(state, 'map', hash);
+};
+
+function setupPermalink(map) {
+  // Restore the view state when navigating through the history, see
+  // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onpopstate
+  window.addEventListener('popstate', function(event) {
+    if (event.state === null) {
+      return;
+    }
+    setMapTime(event.state.time);
+    map.setView(event.state.center, event.state.zoom);
+    shouldUpdatePermalink = false;
+  });
 }
 
 function initTimeController() {
@@ -227,15 +289,45 @@ function timeSliderChanged(event, ui) {
     $(ui.handle).attr('title', sliderTooltip).tooltip('_fixTitle').tooltip('show');
   }, 0);
   // Schedule map update according to updated time
-  scheduleTimer('time_updated', updateMap, 250);
+  scheduleTimer('update_map', updateMap, 250);
 }
 
 function getRoundedTimeNow() {
   return moment.unix(Math.ceil(moment().unix() / TIMELINE_STEP) * TIMELINE_STEP);
 }
 
+function setMapTime(unixTime) {
+  // Default values for map time 'now'
+  var sliderMax = $('#time-slider').slider('option', 'max');
+  var sliderValue = sliderMax;
+  mapDate = null;
+  mapTime = null;
+  sliderEndTime = null;
+  if (unixTime) {
+    // Set map time and date according to given unix time
+    mapTime = unixTime;
+    // Calculate corresponding map date
+    var t = moment.unix(unixTime);
+    if (t.isBefore(moment().subtract(1, 'day'))) {
+      // Set past day time (yesterday or earlier)
+      var d = moment(t).startOf('day');
+      mapDate = d;
+      // Set slider end time to the end of that day
+      sliderEndTime = moment(d).add(TIMELINE_LENGTH, 'seconds');
+    } else {
+      // Set slider end time to the now time rounded to step
+      sliderEndTime = getRoundedTimeNow();
+    }
+    // Calculate slide value
+    sliderValue = sliderMax - sliderEndTime.diff(t, 'seconds');
+  }
+  // Set slider value and update map
+  $('#time-slider').slider('value', sliderValue);
+}
+
 function updateMap() {
   cancelRefreshTimer();
+  updatePermalink();
   var bounds = map.getBounds();
   var minll = bounds.getSouthWest();
   var maxll = bounds.getNorthEast();
@@ -250,7 +342,7 @@ function updateMap() {
 }
 
 function onMapMove(e) {
-  updateMap();
+  scheduleTimer('update_map', updateMap, 0);
 }
 
 function GetXmlHttpObject() {
