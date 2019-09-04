@@ -439,6 +439,8 @@ function stateChanged() {
 
     var popupText = "<h6>" + station.desc + "</h6>";
     if (lm) {
+      popupText += "Частицы PM2.5: <b>" + lm.pm25.toFixed(1) + " мкг/м&sup3;</b><br>";
+      popupText += "Частицы PM10: <b>" + lm.pm10.toFixed(1) + " мкг/м&sup3;</b><hr>";
       popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
       popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
       if (mapTime) {
