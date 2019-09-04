@@ -87,13 +87,7 @@ function getPermalinkData(zoom, center, time) {
   };
 }
 
-function updatePermalink() {
-  if (!shouldUpdatePermalink) {
-    // Do not update the URL when the view was changed in the 'popstate'
-    // handler (browser history navigation)
-    shouldUpdatePermalink = true;
-    return;
-  }
+function getPermalinkHash() {
   var center = map.getCenter();
   var hash = '#' +
     Math.round(center.lat * 100000) / 100000 + ',' +
@@ -102,6 +96,18 @@ function updatePermalink() {
   if (mapTime) {
     hash += ',' + mapTime + 't';
   }
+  return hash;
+}
+
+function updatePermalink() {
+  if (!shouldUpdatePermalink) {
+    // Do not update the URL when the view was changed in the 'popstate'
+    // handler (browser history navigation)
+    shouldUpdatePermalink = true;
+    return;
+  }
+  var center = map.getCenter();
+  var hash = getPermalinkHash();
   var state = {
     zoom: map.getZoom(),
     center: center,
@@ -109,6 +115,18 @@ function updatePermalink() {
   };
   window.history.pushState(state, 'map', hash);
 };
+
+function copyPermlalinkToClipboard() {
+  // Based on https://stackoverflow.com/questions/40958613/how-to-copy-url-on-button-click
+  // and https://stackoverflow.com/questions/14780350/convert-relative-path-to-absolute-using-javascript
+  var inp = $("<input>");
+  $("body").append(inp);
+  var link = document.createElement("a");
+  link.href = getPermalinkHash();
+  inp.val(link.href).select();
+  document.execCommand("copy");
+  inp.remove();
+}
 
 function setupPermalink(map) {
   // Restore the view state when navigating through the history, see
@@ -120,6 +138,22 @@ function setupPermalink(map) {
     setMapTime(event.state.time);
     map.setView(event.state.center, event.state.zoom);
     shouldUpdatePermalink = false;
+  });
+  // Setup permalink copy to clipboard by logo click
+  var title = 'Скопировать ссылку';
+  $('#permalink-copy').tooltip({
+    delay: { show: 500, hide: 100 },
+    container: '#permalink-copy',
+    title: title
+  });
+  var el = $("#permalink-copy");
+  el.click(function(event) {
+    event.preventDefault();
+    copyPermlalinkToClipboard();
+    el.attr('title', "Ссылка скопирована!").tooltip('_fixTitle').tooltip('show');
+    scheduleTimer('permalink_copy_tooltip_hide', function () {
+      el.attr('title', title).tooltip('hide').tooltip('_fixTitle');
+    }, 500);
   });
 }
 
