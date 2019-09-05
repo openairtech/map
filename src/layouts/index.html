@@ -41,16 +41,15 @@
   <script type="text/javascript" src="js/leaflet-beautify-marker-icon.js"></script>
   <!-- Leaflet.RestoreView plugin -->
   <script type='text/javascript' src="js/leaflet.restoreview.js"></script>
-  <!-- Leaflet.Permalink plugin -->
-  <script type='text/javascript' src="js/leaflet.permalink.min.js"></script>
   <!-- OpenAir -->
   {{ $openair_css := resources.Get "css/openair.css" | fingerprint -}}
   <link rel="stylesheet" href="{{ $openair_css.Permalink }}" integrity="{{ $openair_css.Data.Integrity }}">
-  {{ $openair_js := resources.Get "js/openair.js" | resources.ExecuteAsTemplate "js/openair.js" . | fingerprint -}}
+  {{ $js := slice }}{{ range .Site.Params.openair_js }}{{ $js = $js | append (resources.Get .) -}}{{ end -}}
+  {{ $openair_js := $js | resources.Concat "js/openair.js" | resources.ExecuteAsTemplate "js/openair.js" . | fingerprint -}}
   <script type="text/javascript" src="{{ $openair_js.Permalink }}" integrity="{{ $openair_js.Data.Integrity }}" crossorigin=""></script>
 </head>
 
-<body onload="initMap();">
+<body onload="init();">
   <noscript>
     <p id="enable-js">Для просмотра карты, пожалуйста, включите JavaScript в настройках Вашего браузера.</p>
     <p id="enable-js">Please enable JavaScript in your browser for map viewing.</p>
@@ -59,39 +58,39 @@
   <div class="container-flex h-100">
     <div id="map"></div>
   </div>
-  <nav id="time-controller" class="navbar navbar-expand navbar-light mx-auto py-0 pl-2 mb-4 fixed-bottom">
+  <nav id="timeline-controller" class="navbar navbar-expand navbar-light mx-auto py-0 pl-2 mb-4 fixed-bottom">
     <a id="navbar-brand-link" class="navbar-brand" href="">
       <div id="permalink-copy"><img id="navbar-logo" src="android-chrome-192x192.png" alt="OpenAir logo" style="width:1.5em;"></div>
     </a>
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a id="time-step-backward" class="nav-link" href="#">
+        <a id="timeline-step-backward" class="nav-link" href="#">
           <i class="fa fa-step-backward"></i>
         </a>
       </li>
       <li class="nav-item">
-        <a id="time-step-forward" class="nav-link" href="#">
+        <a id="timeline-step-forward" class="nav-link" href="#">
           <i class="fa fa-step-forward"></i>
         </a>
       </li>
       <li class="nav-item">
-        <a id="time-fast-forward" class="nav-link" href="#">
+        <a id="timeline-fast-forward" class="nav-link" href="#">
           <i class="fa fa-fast-forward"></i>
         </a>
       </li>
     </ul>
     <ul class="navbar-nav">
-      <li id="time-date-dropup" class="nav-item dropup">
-        <a id="time-date-icon" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
+      <li id="timeline-date-dropup" class="nav-item dropup">
+        <a id="timeline-date-icon" class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">
           <i class="fa fa-calendar"></i>
         </a>
-        <div id="time-date-dropdown" class="dropdown-menu">
-          <div id="time-datepicker"></div>
+        <div id="timeline-date-dropdown" class="dropdown-menu">
+          <div id="timeline-datepicker"></div>
         </div>
       </li>
     </ul>
     <span class="navbar-text w-100 ml-2">
-      <div id="time-slider">
+      <div id="timeline-slider">
     </span>
   </nav>
   </body>
