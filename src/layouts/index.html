@@ -42,10 +42,17 @@
   <!-- Leaflet.RestoreView plugin -->
   <script type='text/javascript' src="js/leaflet.restoreview.js"></script>
   <!-- OpenAir -->
-  {{ $openair_css := resources.Get "css/openair.css" | fingerprint -}}
-  <link rel="stylesheet" href="{{ $openair_css.Permalink }}" integrity="{{ $openair_css.Data.Integrity }}">
+  {{ $openair_css := resources.Get "css/openair.css" -}}
   {{ $js := slice }}{{ range .Site.Params.openair_js }}{{ $js = $js | append (resources.Get .) -}}{{ end -}}
-  {{ $openair_js := $js | resources.Concat "js/openair.js" | resources.ExecuteAsTemplate "js/openair.js" . | fingerprint -}}
+  {{ $openair_js := $js | resources.Concat "js/openair.js" | resources.ExecuteAsTemplate "js/openair.js" . -}}
+  {{ if eq hugo.Environment "production" -}}
+    {{ $openair_css = $openair_css | minify | fingerprint -}}
+    {{ $openair_js = $openair_js | minify | fingerprint -}}
+  {{ else -}}
+    {{ $openair_css = $openair_css | fingerprint -}}
+    {{ $openair_js = $openair_js | fingerprint -}}
+  {{ end -}}
+  <link rel="stylesheet" href="{{ $openair_css.Permalink }}" integrity="{{ $openair_css.Data.Integrity }}">
   <script type="text/javascript" src="{{ $openair_js.Permalink }}" integrity="{{ $openair_js.Data.Integrity }}" crossorigin=""></script>
 </head>
 
