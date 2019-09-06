@@ -76,15 +76,34 @@ html, body, #map {
 a:active i.fa { color: #0575e4; }
 
 .legend {
-  margin-left: 1em;
-  margin-bottom: 2em;
+  margin-left: 0em;
+  margin-bottom: 5em;
   pointer-events: none;
 }
 .legend span {
   float: left;
-  width: 0.8em;
+  width: 1em;
   height: 2.5em;
   pointer-events: all;
+}
+.legend .top,
+.legend .inner,
+.legend .bottom {
+  border-style: solid;
+  border-color: #d4d4d4;
+}
+.legend .top {
+  border-width: 2px 2px 0px 2px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.legend .inner {
+  border-width: 0px 2px 0px 2px;
+}
+.legend .bottom {
+  border-width: 0px 2px 2px 2px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 .legend .green { background-color: green; }
 .legend .yellow { background-color: yellow; }
