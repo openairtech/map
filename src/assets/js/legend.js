@@ -1,21 +1,27 @@
 const legendData = {
   'legend-green': {
-    title: 'Отлично!<br>AQI: &le;50'
+    category: 'Отлично!',
+    breakpoints: '&le;50'
   },
   'legend-yellow': {
-    title: 'Не отлично, но и не ужасно<br>AQI: 51..100'
+    category: 'Не отлично, но и не ужасно',
+    breakpoints: '51..100'
   },
   'legend-orange': {
-    title: 'Не здорово (для некоторых)<br>AQI: 101..150'
+    category: 'Не здорово (для некоторых)',
+    breakpoints: '101..150'
   },
   'legend-red': {
-    title: 'Не здорово<br>AQI: 151..200'
+    category: 'Не здорово',
+    breakpoints: '151..200'
   },
   'legend-purple': {
-    title: 'Совсем не здорово!<br>AQI: 201..300'
+    category: 'Совсем не здорово!',
+    breakpoints: '201..300'
   },
   'legend-maroon': {
-    title: 'Ужасно!<br>AQI: &gt;300'
+    category: 'Ужасно!',
+    breakpoints: '&gt;300'
   }
 }
 
@@ -26,7 +32,7 @@ function initLegend() {
       delay: { show: 100, hide: 100 },
       placement: 'right',
       html: true,
-      title: d['title']
+      title: d['category'] + '<br><b>AQI: ' + d['breakpoints'] + '</b>'
     });
   });
 }
