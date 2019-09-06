@@ -20,6 +20,8 @@ function init() {
 
   initTimelineController();
 
+  initLegend();
+
   setTimelineTime(permalinkData.time);
   map.setView(permalinkData.center, permalinkData.zoom);
 }

@@ -74,3 +74,21 @@ html, body, #map {
 }
 
 a:active i.fa { color: #0575e4; }
+
+.legend {
+  margin-left: 1em;
+  margin-bottom: 2em;
+  pointer-events: none;
+}
+.legend span {
+  float: left;
+  width: 0.8em;
+  height: 2.5em;
+  pointer-events: all;
+}
+.legend .green { background-color: green; }
+.legend .yellow { background-color: yellow; }
+.legend .orange { background-color: orange; }
+.legend .red { background-color: red; }
+.legend .purple { background-color: purple; }
+.legend .maroon { background-color: maroon; }
