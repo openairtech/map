@@ -1,5 +1,5 @@
 var map;
-var mapStationMarkers = [];
+var mapStationMarkers = {};
 
 const mapboxToken = "{{ .Param "mapbox_token" }}";
 
@@ -80,10 +80,11 @@ function mapStationsResponseHandler(responseText) {
 }
 
 function redrawMapStationMarkers(stations) {
-  removeMapStationMarkers();
+  removeStaleMapStationMarkers(stations);
 
   for (i = 0; i < stations.length; i++) {
     var station = stations[i];
+
     var lm = station.last_measurement;
 
     if (lm) {
@@ -91,7 +92,7 @@ function redrawMapStationMarkers(stations) {
       var aqiColor = getMapStationMarkerColor(aqi);
       var textColor = getMapStationMarkerTextColor(aqi);
 
-      markerOptions = {
+      markerIconOptions = {
         iconSize: [40, 40],
         iconAnchor: [20, 25],
         innerIconAnchor: [-1, 7],
@@ -103,7 +104,7 @@ function redrawMapStationMarkers(stations) {
         textColor: textColor
       };
     } else {
-      markerOptions = {
+      markerIconOptions = {
         iconSize: [40, 40],
         iconAnchor: [20, 25],
         innerIconAnchor: [-2, 10],
@@ -116,15 +117,7 @@ function redrawMapStationMarkers(stations) {
       };
     }
 
-    var ll = new L.LatLng(station.lat, station.long, true);
-
-    var stationMarker = new L.Marker(ll, {
-      icon: L.BeautifyIcon.icon(markerOptions)
-    });
-
-    stationMarker.data = station;
-
-    map.addLayer(stationMarker);
+    var stationIcon = L.BeautifyIcon.icon(markerIconOptions);
 
     var popupText = "<h6>" + station.desc + "</h6>";
     if (lm) {
@@ -146,17 +139,40 @@ function redrawMapStationMarkers(stations) {
         }
       }
     }
-    stationMarker.bindPopup(popupText);
 
-    mapStationMarkers.push(stationMarker);
+    var stationMarker = mapStationMarkers[station.id];
+    if (!stationMarker) {
+      var ll = new L.LatLng(station.lat, station.long, true);
+      stationMarker = new L.Marker(ll, {
+        icon: stationIcon
+      });
+      mapStationMarkers[station.id] = stationMarker;
+      map.addLayer(stationMarker);
+      stationMarker.bindPopup(popupText);
+    } else {
+      stationMarker.setIcon(stationIcon);
+      stationMarker.setPopupContent(popupText);
+    }
+    stationMarker.data = station;
   }
 }
 
-function removeMapStationMarkers() {
-  for (i = 0; i < mapStationMarkers.length; i++) {
-    map.removeLayer(mapStationMarkers[i]);
+// Remove map markers not present in stations array
+function removeStaleMapStationMarkers(stations) {
+  mapStationsLoop:
+  for (var mapStationId in mapStationMarkers) {
+    for (var i = 0; i < stations.length; i++) {
+      var station = stations[i];
+      if (station.id == mapStationId) { // FIXME check for station position is updated
+        // FIXME no need for more checks for already matched station.id
+        continue mapStationsLoop;
+      }
+    }
+    // Map marker for this mapStationId not present in stations array.
+    // Remove it from the map
+    map.removeLayer(mapStationMarkers[mapStationId]);
+    delete mapStationMarkers[mapStationId];
   }
-  mapStationMarkers = [];
 }
 
 function getMapStationMarkerColor(aqi) {
