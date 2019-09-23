@@ -43,6 +43,14 @@ function scheduleMapPeriodicUpdateTimer() {
   scheduleMapUpdateTimer("{{ .Param "map_refresh_period" }}");
 }
 
+function cancelMapStationMarkerPopupsUpdateTimer() {
+  cancelTimer('update_map_marker_popups');
+}
+
+function scheduleMapStationMarkerPopupsUpdateTimer() {
+  scheduleTimer('update_map_marker_popups', updateMapStationMarkerPopups, 10000);
+}
+
 function updateMap() {
   cancelMapUpdateTimer();
   updatePermalink();
@@ -60,9 +68,9 @@ function updateMap() {
 
 function mapStationsErrorHandler(errorCode) {
   // Schedule periodic map update only in realtime (non-history) mode
-    if (!timelineTime) {
-      scheduleMapPeriodicUpdateTimer();
-    }
+  if (!timelineTime) {
+    scheduleMapPeriodicUpdateTimer();
+  }
 }
 
 function mapStationsResponseHandler(responseText) {
@@ -76,7 +84,14 @@ function mapStationsResponseHandler(responseText) {
     return;
   }
 
+  cancelMapStationMarkerPopupsUpdateTimer();
+
   redrawMapStationMarkers(resp.stations);
+
+  // Schedule map marker popups update only in realtime (non-history) mode
+  if (!timelineTime) {
+    scheduleMapStationMarkerPopupsUpdateTimer();
+  }
 }
 
 function redrawMapStationMarkers(stations) {
@@ -119,26 +134,7 @@ function redrawMapStationMarkers(stations) {
 
     var stationIcon = L.BeautifyIcon.icon(markerIconOptions);
 
-    var popupText = "<h6>" + station.desc + "</h6>";
-    if (lm) {
-      popupText += "Частицы PM2.5: <b>" + lm.pm25.toFixed(1) + " мкг/м&sup3;</b><br>";
-      popupText += "Частицы PM10: <b>" + lm.pm10.toFixed(1) + " мкг/м&sup3;</b><hr>";
-      popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
-      popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
-      if (timelineTime) {
-        popupText += "Время: " + moment.unix(lm.timestamp).format('lll');
-      } else {
-        popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
-      }
-    } else {
-      popupText += "Нет данных";
-      if (station.seen) {
-        var stationSeen = moment.unix(station.seen);
-        if (!timelineTime || moment.unix(timelineTime).isAfter(stationSeen)) {
-          popupText += " с " + stationSeen.format('lll');
-        }
-      }
-    }
+    var popupText = getMapStationMarkerPopupContent(station);
 
     var stationMarker = mapStationMarkers[station.id];
     if (!stationMarker) {
@@ -173,6 +169,43 @@ function removeStaleMapStationMarkers(stations) {
     map.removeLayer(mapStationMarkers[mapStationId]);
     delete mapStationMarkers[mapStationId];
   }
+}
+
+function updateMapStationMarkerPopups() {
+  for (var mapStationId in mapStationMarkers) {
+    var stationMarker = mapStationMarkers[mapStationId];
+    var station = stationMarker.data;
+    stationMarker.setPopupContent(getMapStationMarkerPopupContent(station));
+  }
+  // Schedule map marker popups update only in realtime (non-history) mode
+  if (!timelineTime) {
+    scheduleMapStationMarkerPopupsUpdateTimer();
+  }
+}
+
+function getMapStationMarkerPopupContent(station) {
+  var popupText = "<h6>" + station.desc + "</h6>";
+  var lm = station.last_measurement;
+  if (lm) {
+    popupText += "Частицы PM2.5: <b>" + lm.pm25.toFixed(1) + " мкг/м&sup3;</b><br>";
+    popupText += "Частицы PM10: <b>" + lm.pm10.toFixed(1) + " мкг/м&sup3;</b><hr>";
+    popupText += "Температура: <b>" + lm.temperature + " &deg;C</b><br>";
+    popupText += "Влажность: <b>" + lm.humidity + "%</b><br>";
+    if (timelineTime) {
+      popupText += "Время: " + moment.unix(lm.timestamp).format('lll');
+    } else {
+      popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
+    }
+  } else {
+    popupText += "Нет данных";
+    if (station.seen) {
+      var stationSeen = moment.unix(station.seen);
+      if (!timelineTime || moment.unix(timelineTime).isAfter(stationSeen)) {
+        popupText += " с " + stationSeen.format('lll');
+      }
+    }
+  }
+  return popupText;
 }
 
 function getMapStationMarkerColor(aqi) {
