@@ -24,10 +24,16 @@ function initMap() {
   }).addTo(map);
 
   map.on('moveend', onMapMove);
+  map.on('popupopen',onMapPopupOpen);
 }
 
 function onMapMove(e) {
   scheduleMapUpdateTimer(0);
+}
+
+function onMapPopupOpen(e) {
+  var stationMarker = e.popup._source;
+  updateMapStationMarkerPopup(stationMarker);
 }
 
 function cancelMapUpdateTimer() {
@@ -54,16 +60,8 @@ function scheduleMapStationMarkerPopupsUpdateTimer() {
 function updateMap() {
   cancelMapUpdateTimer();
   updatePermalink();
-  var bounds = map.getBounds();
-  var minll = bounds.getSouthWest();
-  var maxll = bounds.getNorthEast();
-  var request = '/stations?bbox=' + minll.lng + ',' + minll.lat +
-    ',' + maxll.lng + ',' + maxll.lat;
-  if (timelineTime) {
-    request += '&mfrom=' + timelineTime;
-  }
-  request += '&mlast=3h';
-  apiGet(request, mapStationsResponseHandler, mapStationsErrorHandler)
+  apiGetStations(mapStationsResponseHandler, mapStationsErrorHandler,
+    map.getBounds(), timelineTime);
 }
 
 function mapStationsErrorHandler(errorCode) {
@@ -134,22 +132,23 @@ function redrawMapStationMarkers(stations) {
 
     var stationIcon = L.BeautifyIcon.icon(markerIconOptions);
 
-    var popupText = getMapStationMarkerPopupContent(station);
-
     var stationMarker = mapStationMarkers[station.id];
     if (!stationMarker) {
+      // Add new marker
       var ll = new L.LatLng(station.lat, station.long, true);
       stationMarker = new L.Marker(ll, {
         icon: stationIcon
       });
       mapStationMarkers[station.id] = stationMarker;
       map.addLayer(stationMarker);
-      stationMarker.bindPopup(popupText);
+      var popupContent = getMapStationMarkerPopupContent(station);
+      stationMarker.bindPopup(popupContent);
     } else {
+      // Update existing marker
       stationMarker.setIcon(stationIcon);
-      stationMarker.setPopupContent(popupText);
     }
-    stationMarker.data = station;
+    stationMarker.station = station;
+    updateMapStationMarkerPopup(stationMarker);
   }
 }
 
@@ -174,8 +173,7 @@ function removeStaleMapStationMarkers(stations) {
 function updateMapStationMarkerPopups() {
   for (var mapStationId in mapStationMarkers) {
     var stationMarker = mapStationMarkers[mapStationId];
-    var station = stationMarker.data;
-    stationMarker.setPopupContent(getMapStationMarkerPopupContent(station));
+    updateMapStationMarkerPopup(stationMarker);
   }
   // Schedule map marker popups update only in realtime (non-history) mode
   if (!timelineTime) {
@@ -183,29 +181,261 @@ function updateMapStationMarkerPopups() {
   }
 }
 
-function getMapStationMarkerPopupContent(station) {
-  var popupText = "<h6>" + station.desc + "</h6>";
+function updateMapStationMarkerPopup(stationMarker) {
+  var station = stationMarker.station;
   var lm = station.last_measurement;
-  if (lm) {
-    popupText += "Частицы PM2.5: <b>" + lm.pm25.toFixed(1) + " мкг/м&sup3;</b><br>";
-    popupText += "Частицы PM10: <b>" + lm.pm10.toFixed(1) + " мкг/м&sup3;</b><hr>";
-    popupText += "Температура: <b>" + lm.temperature.toFixed(1) + " &deg;C</b><br>";
-    popupText += "Влажность: <b>" + Math.round(lm.humidity) + "%</b><br>";
-    if (timelineTime) {
-      popupText += "Время: " + moment.unix(lm.timestamp).format('lll');
-    } else {
-      popupText += "Обновлено: " + moment.unix(lm.timestamp).fromNow();
+  if (!lm) {
+    return;
+  }
+  var popup = stationMarker.getPopup();
+  if (!popup || !popup.isOpen()) {
+    return;
+  }
+  // Update popup data
+  var e = popup.getContent().querySelector('[name="stationPopupSensorData"]');
+  if (e) {
+    e.innerHTML = getMapStationMarkerPopupSensorDataContent(station).outerHTML;
+  }
+
+  updateMapStationMarkerPopupAqiChart(stationMarker);
+}
+
+function updateMapStationMarkerPopupAqiChart(stationMarker) {
+  var aqiChartHours = 12;
+  var station = stationMarker.station;
+  var onSuccess = function(responseText) {
+    var resp = JSON.parse(responseText);
+    if (resp && resp.measurements) {
+      drawMapStationMarkerPopupAqiChart(stationMarker, resp.measurements, aqiChartHours);
     }
+  };
+  var onError = function(errorStatus) {
+    console.log("apiGetMeasurements error: " + errorStatus);
+  };
+  var timeTo = timelineTime ? timelineTime : moment().unix();
+  var timeFrom = moment.unix(timeTo).subtract(12, 'hour').unix();
+  apiGetMeasurements(onSuccess, onError, station.id, timeFrom, timeTo);
+}
+
+function drawMapStationMarkerPopupAqiChart(stationMarker, measurements, timeHours) {
+  var timeEnd = timelineTime ? moment.unix(timelineTime) : moment();
+  var timeRanges = [];
+  for (var h = timeHours - 1; h >= 0; h--) {
+    timeRanges.push(moment(timeEnd).subtract(h, 'hour').startOf('hour'));
+  }
+
+  var aqiValues = aggregateMapStationMeasurements(measurements, timeRanges);
+
+  var aqiColors = [];
+  for (var i = 0; i < aqiValues.length; i++) {
+    var aqi = aqiValues[i];
+    aqiColors.push(getMapStationMarkerColor(aqi));
+  }
+
+  var aqiChart = getMapStationMarkerPopupAqiChart(stationMarker);
+  aqiChart.data.labels = timeRanges;
+  if (!aqiChart.data.datasets || aqiChart.data.datasets.length == 0) {
+    aqiChart.data.datasets = [{
+      label: 'AQI',
+      data: aqiValues,
+      backgroundColor: aqiColors,
+      borderWidth: 1
+    }];
   } else {
-    popupText += "Нет данных";
-    if (station.seen) {
-      var stationSeen = moment.unix(station.seen);
-      if (!timelineTime || moment.unix(timelineTime).isAfter(stationSeen)) {
-        popupText += " с " + stationSeen.format('lll');
+    aqiChart.data.datasets[0].data = aqiValues;
+    aqiChart.data.datasets[0].backgroundColor = aqiColors;
+  }
+  aqiChart.update();
+}
+
+// Aggregate station measurements to given time ranges
+function aggregateMapStationMeasurements(measurements, timeRanges) {
+  // Create empty time range values array
+  var aqiValues = [];
+  for (var i = 0; i < timeRanges.length; i++) {
+    aqiValues.push(null);
+  }
+
+  // Check all measurement timestamps
+  for (var i = 0; i < measurements.length; i++) {
+    var m = measurements[i];
+    var aqiValue = m.aqi;
+    var aqiTimestamp = moment.unix(m.timestamp);
+    // Find time range this measurement is belong to
+    for (var j = timeRanges.length-1; j >= 0; j--) {
+      if (timeRanges[j].isSameOrBefore(aqiTimestamp)) {
+        // Update time range value if this is the first value or max value
+        if (!aqiValues[j] || aqiValues[j] < aqiValue) {
+          aqiValues[j] = aqiValue;
+        }
+        break;
       }
     }
   }
-  return popupText;
+
+  return aqiValues;
+}
+
+function getMapStationMarkerPopupAqiChart(stationMarker) {
+  var aqiChart = stationMarker.aqiChart;
+
+  if (!aqiChart) {
+    var popup = stationMarker.getPopup();
+    var canvas = popup.getContent().querySelector('[name="stationPopupAqiChart"]');
+    var ctx = canvas.getContext('2d');
+    var aqiChart = new Chart(ctx, {
+      type: 'bar',
+      options: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          fontSize: 10,
+          padding: 2,
+          text: 'AQI'
+        },
+        scales: {
+          xAxes: [{
+            type: 'time',
+            time: {
+              unit: 'hour',
+              unitStepSize: 1,
+              displayFormats: {
+                'hour': 'HH',
+              },
+              tooltipFormat: 'lll'
+            },
+            gridLines: {
+                offsetGridLines: true
+            }
+          }],
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
+        }
+      }
+    });
+    stationMarker.aqiChart = aqiChart;
+  }
+
+  return aqiChart;
+}
+
+function getMapStationMarkerPopupContent(station) {
+  // Station name
+  var html = '<div class="row no-gutters">';
+  html += '<div class="col-12">';
+  html += '<h6>' + station.desc + '</h6>';
+  html += '</div>';
+  html += '</div>';
+
+  // AQI chart
+  html += '<div class="row no-gutters">';
+  html += '<div class="col-12">';
+  html += '<canvas name="stationPopupAqiChart" width="250" height="100"></canvas>';
+  html += '</div>';
+  html += '</div>';
+
+  // Sensor data
+  html += '<div class="row no-gutters">';
+  html += '<div name="stationPopupSensorData" class="col-12">';
+  html += '</div>';
+  html += '</div>';
+
+  var content = L.DomUtil.create('div', 'container-fluid p-0');
+  content.innerHTML = html;
+
+  return content;
+}
+
+function getMapStationMarkerPopupSensorDataContent(station) {
+  var html;
+
+  var lm = station.last_measurement;
+  if (lm) {
+    // PM2.5
+    html = '<div class="row no-gutters">';
+
+    html += '<div class="col-6">';
+    html += "Частицы PM2.5:";
+    html += '</div>';
+
+    html += '<div class="col-6">';
+    html += '<b>' + lm.pm25.toFixed(1) + ' мкг/м&sup3;</b><br>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // PM10
+    html += '<div class="row no-gutters">';
+
+    html += '<div class="col-6">';
+    html += "Частицы PM10:";
+    html += '</div>';
+
+    html += '<div class="col-6">';
+    html += '<b>' + lm.pm10.toFixed(1) + ' мкг/м&sup3;</b>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // Temperature
+    html += '<div class="row no-gutters mt-1">';
+
+    html += '<div class="col-6">';
+    html += "Температура:";
+    html += '</div>';
+
+    html += '<div class="col-6">';
+    html += '<b>' + lm.temperature.toFixed(1) + ' &deg;C</b>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // Humidity
+    html += '<div class="row no-gutters">';
+
+    html += '<div class="col-6">';
+    html += "Влажность:";
+    html += '</div>';
+
+    html += '<div class="col-6">';
+    html += '<b>' + Math.round(lm.humidity) + '%</b>';
+    html += '</div>';
+
+    html += '</div>';
+
+    // Timestamp
+    html += '<div class="row no-gutters mt-1">';
+    html += '<div class="col-12">';
+    if (timelineTime) {
+      html += 'Время: ' + moment.unix(lm.timestamp).format('lll');
+    } else {
+      html += 'Обновлено: ' + moment.unix(lm.timestamp).fromNow();
+    }
+    html += '</div>';
+
+    html += '</div>';
+  } else {
+    html = '<div class="row">';
+    html += '<div class="col-12">';
+    html += "Нет данных";
+    if (station.seen) {
+      var stationSeen = moment.unix(station.seen);
+      if (!timelineTime || moment.unix(timelineTime).isAfter(stationSeen)) {
+        html += " с " + stationSeen.format('lll');
+      }
+    }
+    html += '</div>';
+  }
+
+  var content = L.DomUtil.create('div', 'container-fluid p-0');
+  content.innerHTML = html;
+
+  return content;
 }
 
 function getMapStationMarkerColor(aqi) {

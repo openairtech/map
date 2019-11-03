@@ -1,16 +1,8 @@
-var ajaxRequest;
-
 function initApi() {
-  ajaxRequest = getXmlHttpObject();
-  if (ajaxRequest == null) {
-    return;
-  }
-  if (ajaxRequest.overrideMimeType) {
-    ajaxRequest.overrideMimeType("application/json");
-  }
+  // Do nothing for now
 }
 
-function getXmlHttpObject() {
+function apiXmlHttpObject() {
   if (window.XMLHttpRequest) {
     return new XMLHttpRequest();
   }
@@ -20,7 +12,19 @@ function getXmlHttpObject() {
   return null;
 }
 
+function apiRequest() {
+  var ajaxRequest = apiXmlHttpObject();
+  if (ajaxRequest == null) {
+    return null;
+  }
+  if (ajaxRequest.overrideMimeType) {
+    ajaxRequest.overrideMimeType("application/json");
+  }
+  return ajaxRequest;
+}
+
 function apiGet(request, onSuccess, onError) {
+  var ajaxRequest = apiRequest();
   ajaxRequest.onreadystatechange = function() {
     if (ajaxRequest.readyState != 4) {
       return;
@@ -32,4 +36,23 @@ function apiGet(request, onSuccess, onError) {
   };
   ajaxRequest.open('GET', "{{ .Param "api_url" }}" + request, true);
   ajaxRequest.send(null);
+}
+
+function apiGetStations(onSuccess, onError, bounds, time) {
+  var minll = bounds.getSouthWest();
+  var maxll = bounds.getNorthEast();
+  var request = '/stations?bbox=' + minll.lng + ',' + minll.lat +
+    ',' + maxll.lng + ',' + maxll.lat;
+  if (time) {
+    request += '&mfrom=' + time;
+  }
+  request += '&mlast=3h';
+  apiGet(request, onSuccess, onError);
+}
+
+function apiGetMeasurements(onSuccess, onError, stationId, timeFrom, timeTo) {
+  var request = '/measurements?station=' + stationId;
+  request += '&from=' + timeFrom;
+  request += '&to=' + timeTo;
+  apiGet(request, onSuccess, onError);
 }
