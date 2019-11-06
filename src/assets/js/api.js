@@ -50,9 +50,12 @@ function apiGetStations(onSuccess, onError, bounds, time) {
   apiGet(request, onSuccess, onError);
 }
 
-function apiGetMeasurements(onSuccess, onError, stationId, timeFrom, timeTo) {
+function apiGetMeasurements(onSuccess, onError, stationId, timeFrom, timeTo, vars) {
   var request = '/measurements?station=' + stationId;
   request += '&from=' + timeFrom;
   request += '&to=' + timeTo;
+  if (vars) {
+    request += '&v=' + vars.join();
+  }
   apiGet(request, onSuccess, onError);
 }

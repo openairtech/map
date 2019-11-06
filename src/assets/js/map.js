@@ -214,7 +214,7 @@ function updateMapStationMarkerPopupAqiChart(stationMarker) {
   };
   var timeTo = timelineTime ? timelineTime : moment().unix();
   var timeFrom = moment.unix(timeTo).subtract(12, 'hour').unix();
-  apiGetMeasurements(onSuccess, onError, station.id, timeFrom, timeTo);
+  apiGetMeasurements(onSuccess, onError, station.id, timeFrom, timeTo, ["aqi"]);
 }
 
 function drawMapStationMarkerPopupAqiChart(stationMarker, measurements, timeHours) {
