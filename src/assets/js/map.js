@@ -201,7 +201,7 @@ function updateMapStationMarkerPopup(stationMarker) {
 }
 
 function updateMapStationMarkerPopupAqiChart(stationMarker) {
-  var aqiChartHours = 12;
+  var aqiChartHours = {{ .Param "map_charts_time_window" }};
   var station = stationMarker.station;
   var onSuccess = function(responseText) {
     var resp = JSON.parse(responseText);
@@ -213,7 +213,7 @@ function updateMapStationMarkerPopupAqiChart(stationMarker) {
     console.log("apiGetMeasurements error: " + errorStatus);
   };
   var timeTo = timelineTime ? timelineTime : moment().unix();
-  var timeFrom = moment.unix(timeTo).subtract(12, 'hour').unix();
+  var timeFrom = moment.unix(timeTo).subtract(aqiChartHours, 'hour').unix();
   apiGetMeasurements(onSuccess, onError, station.id, timeFrom, timeTo, ["aqi"]);
 }
 

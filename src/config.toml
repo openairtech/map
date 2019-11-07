@@ -11,4 +11,5 @@ publishDir = "../release"
     mapbox_token = "pk.eyJ1IjoiM2NreSIsImEiOiJjancwYnM4NzIwOG43M3lzMnljZGppbmo5In0.Mtp-J2o-f_5c4qs-X6kCOQ"
     map_center = "[48.709144, 44.506645]"
     map_zoom = 13
-    map_refresh_period = "30000" # im milliseconds
+    map_refresh_period = "30000" # in milliseconds
+    map_charts_time_window = "24" # in hours
