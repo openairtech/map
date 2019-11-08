@@ -13,3 +13,4 @@ publishDir = "../release"
     map_zoom = 13
     map_refresh_period = "30000" # in milliseconds
     map_charts_time_window = "24" # in hours
+    map_charts_update_period = "120" # in seconds
