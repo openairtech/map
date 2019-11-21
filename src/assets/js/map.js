@@ -442,7 +442,7 @@ function getMapStationMarkerPopupSensorDataContent(station) {
 }
 
 function getMapStationMeasurementSensorValue(measurement, sensorName, numDecimals) {
-  if (measurement && measurement[sensorName]) {
+  if (measurement && sensorName in measurement) {
     return measurement[sensorName].toFixed(numDecimals);
   }
   return '--';
