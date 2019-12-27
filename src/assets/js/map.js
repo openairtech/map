@@ -1,6 +1,9 @@
 var map;
 var mapStationMarkers = {};
 
+var mapStationMarkerPopupOpened = false;
+var mapStationMarkerPopupPinned = false;
+
 const mapboxToken = "{{ .Param "mapbox_token" }}";
 
 function initMap() {
@@ -25,6 +28,7 @@ function initMap() {
 
   map.on('moveend', onMapMove);
   map.on('popupopen',onMapPopupOpen);
+  map.on('popupclose',onMapPopupClose);
 }
 
 function onMapMove(e) {
@@ -34,6 +38,12 @@ function onMapMove(e) {
 function onMapPopupOpen(e) {
   var stationMarker = e.popup._source;
   updateMapStationMarkerPopup(stationMarker);
+  mapStationMarkerPopupOpened = true;
+}
+
+function onMapPopupClose(e) {
+  mapStationMarkerPopupOpened = false;
+  mapStationMarkerPopupPinned = false;
 }
 
 function cancelMapUpdateTimer() {
@@ -143,6 +153,30 @@ function redrawMapStationMarkers(stations) {
       map.addLayer(stationMarker);
       var popupContent = getMapStationMarkerPopupContent(station);
       stationMarker.bindPopup(popupContent);
+      stationMarker.on('mouseover', function(e) {
+        if (!mapStationMarkerPopupPinned) {
+          e.target.openPopup();
+        }
+      });
+      stationMarker.off('click');
+      stationMarker.on('click', function(e) {
+        if (mapStationMarkerPopupOpened) {
+          if (mapStationMarkerPopupPinned) {
+            e.target.closePopup();
+            mapStationMarkerPopupPinned = false;
+          } else {
+            mapStationMarkerPopupPinned = true;
+          }
+        } else {
+          e.target.openPopup();
+          mapStationMarkerPopupPinned = true;
+        }
+      });
+      stationMarker.on('mouseout', function(e) {
+        if (!mapStationMarkerPopupPinned) {
+          e.target.closePopup();
+        }
+      });
     } else {
       // Update existing marker
       stationMarker.setIcon(stationIcon);
