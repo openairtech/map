@@ -75,7 +75,7 @@ function setupPermalink(map) {
     shouldUpdatePermalink = false;
   });
   // Setup permalink copy to clipboard by logo click
-  var title = 'Скопировать ссылку';
+  var title = 'Скопировать ссылку на карту';
   $('#permalink-copy').tooltip({
     delay: { show: 500, hide: 100 },
     container: '#permalink-copy',
