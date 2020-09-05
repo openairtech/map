@@ -266,12 +266,20 @@ function drawMapStationMarkerPopupAqiChart(stationMarker, measurements, time, ti
     timeRanges.push(moment(time).subtract(h, 'hour').startOf('hour'));
   }
 
-  var aqiValues = aggregateMapStationMeasurements(measurements, timeRanges);
+  var aggregatedMeasurements = aggregateMapStationMeasurements(measurements, timeRanges);
 
+  var aqiValues = [];
   var aqiColors = [];
-  for (var i = 0; i < aqiValues.length; i++) {
-    var aqi = aqiValues[i];
-    aqiColors.push(getMapStationMarkerColor(aqi));
+  for (var i = 0; i < aggregatedMeasurements.length; i++) {
+    var aggregatedMeasurement = aggregatedMeasurements[i];
+    if (aggregatedMeasurement) {
+      var aqi = aggregatedMeasurement.aqi;
+      aqiValues.push(aqi);
+      aqiColors.push(getMapStationMarkerColor(aqi));
+    } else {
+      aqiValues.push(null);
+      aqiColors.push(null);      
+    }
   }
 
   var aqiChart = getMapStationMarkerPopupAqiChart(stationMarker);
@@ -281,41 +289,49 @@ function drawMapStationMarkerPopupAqiChart(stationMarker, measurements, time, ti
       label: 'AQI',
       data: aqiValues,
       backgroundColor: aqiColors,
-      borderWidth: 1
+      borderWidth: 1,
+      measurements: aggregatedMeasurements
     }];
   } else {
-    aqiChart.data.datasets[0].data = aqiValues;
-    aqiChart.data.datasets[0].backgroundColor = aqiColors;
+    var dataset = aqiChart.data.datasets[0];
+    dataset.data = aqiValues;
+    dataset.backgroundColor = aqiColors;
+    dataset.measurements = aggregatedMeasurements;
   }
   aqiChart.update();
 }
 
 // Aggregate station measurements to given time ranges
 function aggregateMapStationMeasurements(measurements, timeRanges) {
-  // Create empty time range values array
-  var aqiValues = [];
+  // Create empty time range aggregated measurements array
+  var aggregatedMeasurements = [];
   for (var i = 0; i < timeRanges.length; i++) {
-    aqiValues.push(null);
+    aggregatedMeasurements.push(null);
   }
 
   // Check all measurement timestamps
   for (var i = 0; i < measurements.length; i++) {
     var m = measurements[i];
-    var aqiValue = m.aqi;
-    var aqiTimestamp = moment.unix(m.timestamp);
     // Find time range this measurement is belong to
     for (var j = timeRanges.length-1; j >= 0; j--) {
-      if (timeRanges[j].isSameOrBefore(aqiTimestamp)) {
-        // Update time range value if this is the first value or max value
-        if (!aqiValues[j] || aqiValues[j] < aqiValue) {
-          aqiValues[j] = aqiValue;
+      if (timeRanges[j].isSameOrBefore(moment.unix(m.timestamp))) {
+        // Update time range data if it's first or max AQI value
+        if (!aggregatedMeasurements[j] || aggregatedMeasurements[j].aqi < m.aqi) {
+          aggregatedMeasurements[j] = { 'aqi': m.aqi, 'timestamp': m.timestamp };
         }
         break;
       }
     }
   }
 
-  return aqiValues;
+  return aggregatedMeasurements;
+}
+
+// Handle popup AQI chart clicks
+function handleMapStationMarkerPopupAqiChartClick(evt, item) {
+  var index = item[0]["_index"];
+  var timestamp = item[0]["_chart"].data.datasets[0].measurements[index].timestamp;
+  setTimelineTime(timestamp);
 }
 
 function getMapStationMarkerPopupAqiChart(stationMarker) {
@@ -357,7 +373,8 @@ function getMapStationMarkerPopupAqiChart(stationMarker) {
               beginAtZero: true
             }
           }]
-        }
+        },
+        onClick: handleMapStationMarkerPopupAqiChartClick
       }
     });
     stationMarker.aqiChart = aqiChart;

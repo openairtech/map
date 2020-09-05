@@ -3,6 +3,7 @@ const TIMELINE_LENGTH = 24 * 60 * 60 - TIMELINE_STEP; // in seconds
 
 var timelineDay = null;
 var timelineTime = null;
+var timelineTimeIsExact = false;
 var timelineSliderEndTime = null;
 
 function initTimelineController() {
@@ -141,11 +142,12 @@ function timelineSliderCreated(event, ui) {
 }
 
 function timelineSliderChanged(event, ui) {
+  var sliderTooltip;
   if (!timelineDay && ui.value == 0) {
     // Rewind time to now
     timelineTime = null; // now
     timelineSliderEndTime = null; // now
-    var sliderTooltip = "Сейчас";
+    sliderTooltip = "Сейчас";
     scheduleTimer('tooltip_hide', function () {
       $(ui.handle).tooltip('hide');
     }, 1000);
@@ -162,9 +164,13 @@ function timelineSliderChanged(event, ui) {
       timelineSliderEndTime = getTimelineRoundedNowTime();
     }
     var sliderTime = moment(timelineSliderEndTime).add(ui.value, 'seconds');
-    var sliderTooltip = sliderTime.format('lll');
-    timelineTime = sliderTime.unix();
+    if (!timelineTimeIsExact) {
+      timelineTime = sliderTime.unix();
+    }
+    sliderTooltip = moment.unix(timelineTime).format('lll');
   }
+  // Clear exact timeline time flag after use
+  timelineTimeIsExact = false;
   // Update tooltip
   scheduleTimer('tooltip_update', function () {
     $(ui.handle).attr('title', sliderTooltip).tooltip('_fixTitle').tooltip('show');
@@ -183,10 +189,13 @@ function setTimelineTime(unixTime) {
   var sliderValue = sliderMax;
   timelineDay = null;
   timelineTime = null;
+  timelineTimeIsExact = false;
   timelineSliderEndTime = null;
   if (unixTime) {
     // Set map time and date according to given unix time
     timelineTime = unixTime;
+    // Timeline time shouldn't be rounded to timeline step
+    timelineTimeIsExact = true;
     // Calculate corresponding map date
     var t = moment.unix(unixTime);
     if (t.isBefore(moment().subtract(1, 'day'))) {
