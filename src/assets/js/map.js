@@ -518,7 +518,7 @@ function getMapStationMarkerColor(aqi) {
 }
 
 function getMapStationMarkerTextColor(aqi) {
-  if (aqi < 51) {
+  if (aqi < 51 || aqi >= 151) {
     return 'white';
   }
   return "black";
