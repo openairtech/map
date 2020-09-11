@@ -4,9 +4,14 @@ var mapStationMarkers = {};
 var mapStationMarkerPopupOpened = false;
 var mapStationMarkerPopupPinned = false;
 
+var mapStationsShowAll = false;
+
 const mapboxToken = "{{ .Param "mapbox_token" }}";
 
 function initMap() {
+  urlParams = new URLSearchParams(window.location.search);
+  mapStationsShowAll = urlParams.get('stations') == 'all';
+
   map = L.map('map');
   map.zoomControl.setPosition('topright');
   L.control.locate({
@@ -74,7 +79,7 @@ function updateMap() {
   cancelMapUpdateTimer();
   updatePermalink();
   apiGetStations(mapStationsResponseHandler, mapStationsErrorHandler,
-    map.getBounds(), timelineTime);
+    map.getBounds(), timelineTime, mapStationsShowAll);
 }
 
 function mapStationsErrorHandler(errorCode) {

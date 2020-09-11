@@ -38,15 +38,18 @@ function apiGet(request, onSuccess, onError) {
   ajaxRequest.send(null);
 }
 
-function apiGetStations(onSuccess, onError, bounds, time) {
+function apiGetStations(onSuccess, onError, bounds, time, all) {
   var minll = bounds.getSouthWest();
   var maxll = bounds.getNorthEast();
   var request = '/stations?bbox=' + minll.lng + ',' + minll.lat +
     ',' + maxll.lng + ',' + maxll.lat;
   if (time) {
     request += '&mfrom=' + time;
-  }
+  }  
   request += '&mlast=3h';
+  if (all) {
+    request += '&sall=true';
+  }
   apiGet(request, onSuccess, onError);
 }
 
