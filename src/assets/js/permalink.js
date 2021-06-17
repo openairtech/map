@@ -1,4 +1,5 @@
 var shouldUpdatePermalink = true;
+var currentPermalinkHash;
 
 function getPermalinkData(zoom, center, time) {
   if (window.location.hash !== '') {
@@ -43,12 +44,17 @@ function updatePermalink() {
   }
   var center = map.getCenter();
   var hash = getPermalinkHash();
+  if (currentPermalinkHash === hash) {
+    // Do not push state to history if permalink is not changed
+    return;
+  }
   var state = {
     zoom: map.getZoom(),
     center: center,
     time: timelineTime
   };
   window.history.pushState(state, 'map', hash);
+  currentPermalinkHash = hash;
 };
 
 function copyPermlalinkToClipboard() {
