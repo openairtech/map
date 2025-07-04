@@ -17,5 +17,8 @@ build:
 publish: build
 	$(RSYNC) -avz --delete $(REL_DIR)/ $(PUB_SRV):$(PUB_DIR)
 
+docker:
+	docker build -t openairtech/map .
+
 clean:
 	rm -rf $(REL_DIR)
