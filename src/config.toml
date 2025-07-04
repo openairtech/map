@@ -1,7 +1,7 @@
 baseURL = "https://openair.city/"
 languageCode = "en-us"
 title = "OpenAir - Карта качества воздуха"
-disableKinds=[ "RSS", "sitemap", "taxonomyTerm" ]
+disableKinds=[ "RSS", "sitemap", "taxonomy" ]
 publishDir = "../release"
 
 [params]
