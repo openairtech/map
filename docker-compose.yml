@@ -3,5 +3,8 @@ services:
   map:
     image: openairtech/map
     restart: always
+    healthcheck:
+        test: ["CMD-SHELL", "curl -so /dev/null http://localhost/ || exit 1"]
+        timeout: 10s
     ports:
       - '127.0.0.1:8080:80'
