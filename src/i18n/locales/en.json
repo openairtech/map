@@ -1,0 +1,34 @@
+{
+  "legend": {
+    "excellent": "Excellent!",
+    "fair": "Moderate",
+    "unhealthySensitive": "Unhealthy for sensitive groups",
+    "unhealthy": "Unhealthy",
+    "veryUnhealthy": "Very unhealthy!",
+    "hazardous": "Hazardous!"
+  },
+  "popup": {
+    "pm25": "PM2.5 particles",
+    "pm10": "PM10 particles",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "units": {
+      "ugm3": "µg/m³",
+      "celsius": "°C",
+      "percent": "%"
+    },
+    "updatedAt": "Updated: {time}",
+    "timeAt": "Time: {time}",
+    "noDataSince": "No data since {time}"
+  },
+  "timeline": {
+    "now": "Now"
+  },
+  "calendar": {
+    "today": "Today"
+  },
+  "permalink": {
+    "copyTooltip": "Copy map link",
+    "copiedTooltip": "Link copied!"
+  }
+}

@@ -1,4 +1,6 @@
-(function() {
+import L from 'leaflet'
+
+;(function() {
     var RestoreViewMixin = {
         restoreView: function () {
             if (!storageAvailable('localStorage')) {

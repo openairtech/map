@@ -1,0 +1,34 @@
+{
+  "legend": {
+    "excellent": "Хорошо",
+    "fair": "Умеренно",
+    "unhealthySensitive": "Вредно для чувствительных групп",
+    "unhealthy": "Вредно",
+    "veryUnhealthy": "Крайне вредно!",
+    "hazardous": "Опасно!"
+  },
+  "popup": {
+    "pm25": "Частицы PM2.5",
+    "pm10": "Частицы PM10",
+    "temperature": "Температура",
+    "humidity": "Влажность",
+    "units": {
+      "ugm3": "мкг/м³",
+      "celsius": "°C",
+      "percent": "%"
+    },
+    "updatedAt": "Обновлено: {time}",
+    "timeAt": "Время: {time}",
+    "noDataSince": "Нет данных с {time}"
+  },
+  "timeline": {
+    "now": "Сейчас"
+  },
+  "calendar": {
+    "today": "Сегодня"
+  },
+  "permalink": {
+    "copyTooltip": "Скопировать ссылку на карту",
+    "copiedTooltip": "Ссылка скопирована!"
+  }
+}

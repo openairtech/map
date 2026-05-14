@@ -1,0 +1,105 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html, body, #app, #map {
+  height: 100%;
+  width: 100%;
+}
+
+.enable-js {
+  margin: 0;
+  padding: 12px 15px;
+  background-color: #FFC107;
+  color: #000;
+  text-align: center;
+  font-family: "Arial";
+  font-size: 20px;
+}
+
+#timeline-controller {
+  max-width: 650px;
+  background-color: #f5f5f5;
+  background-image: linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+  background-repeat: repeat-x;
+  border: 1px solid #d4d4d4;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 2em !important;
+}
+
+#navbar-logo {
+  vertical-align: top;
+}
+
+.tooltip {
+  --bs-tooltip-bg: #0575e4;
+}
+.tooltip-inner {
+  white-space: nowrap;
+  max-width: none;
+}
+
+a:active i.bi { color: #0575e4; }
+
+/* Calendar picker */
+.datepicker-inline { width: 218px; }
+.datepicker-inline table { width: 100%; margin: 0; user-select: none; }
+.datepicker-inline td,
+.datepicker-inline th {
+  text-align: center;
+  padding: 4px 3px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.datepicker-inline th.datepicker-switch { font-weight: 600; }
+.datepicker-inline th.next.disabled { color: #aaa; cursor: default; pointer-events: none; }
+.datepicker-inline td.day:hover:not(.disabled):not(.active):not(.today) { background: #f0f0f0; }
+.datepicker-inline td.old,
+.datepicker-inline td.new { color: #aaa; }
+.datepicker-inline td.disabled { color: #ccc; cursor: default; pointer-events: none; }
+.datepicker-inline td.today { background: #fde19a; }
+.datepicker-inline td.active { background: #0575e4; color: #fff; }
+.datepicker-inline tfoot th.today { font-weight: normal; color: #0575e4; }
+.datepicker-inline tfoot th.today:hover { background: #f0f0f0; }
+
+.legend {
+  margin-left: 0;
+  margin-bottom: 5em;
+  pointer-events: none;
+}
+.legend span {
+  float: left;
+  width: 1em;
+  height: 2.5em;
+  pointer-events: all;
+}
+.legend .top,
+.legend .inner,
+.legend .bottom {
+  border-style: solid;
+  border-color: #d4d4d4;
+}
+.legend .top {
+  border-width: 2px 2px 0px 2px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.legend .inner {
+  border-width: 0px 2px 0px 2px;
+}
+.legend .bottom {
+  border-width: 0px 2px 2px 2px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+.legend .green  { background-color: green; }
+.legend .yellow { background-color: yellow; }
+.legend .orange { background-color: orange; }
+.legend .red    { background-color: red; }
+.legend .purple { background-color: purple; }
+.legend .maroon { background-color: maroon; }

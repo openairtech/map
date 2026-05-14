@@ -1,4 +1,3 @@
-dev/**
-release/**
-resources
-*.lock
+dist/
+node_modules/
+.env

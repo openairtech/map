@@ -5,9 +5,9 @@
   http://leafletjs.com
 */
 
-/*global L of leaflet*/
+import L from 'leaflet'
 
-(function (window, document, undefined) {
+;(function (window, document, undefined) {
 
     'use strict';
 
