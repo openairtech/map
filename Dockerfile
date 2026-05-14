@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+ARG MAPBOX_TOKEN
+ENV VITE_MAPBOX_TOKEN=$MAPBOX_TOKEN
+
 COPY . .
 RUN npm run build
 

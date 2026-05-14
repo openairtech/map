@@ -71,6 +71,7 @@ jobs:
           build-args: |
             VERSION=${{ env.BUILD_VERSION }}
             TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
+            MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}
           cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
           cache-to: type=gha,mode=max,scope=${{ env.IMAGE_NAME }}
 
