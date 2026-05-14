@@ -10,7 +10,6 @@ npm run build      # Production build → dist/
 npm run typecheck  # vue-tsc type check (no emit)
 npm run preview    # Serve the dist/ build locally
 make docker        # docker build -t openairtech/map .
-make publish       # rsync dist/ to openair.city
 ```
 
 No test suite exists. Type checking is the primary correctness gate.
