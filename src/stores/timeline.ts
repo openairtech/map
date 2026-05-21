@@ -10,7 +10,6 @@ export const useTimelineStore = defineStore('timeline', () => {
   const day = ref<Dayjs | null>(null)           // null = today
   const sliderValue = ref<number>(0)            // range: [-TIMELINE_LENGTH, 0]
   const sliderEndTime = ref<Dayjs | null>(null) // right edge of slider window
-  const _timeIsExact = ref(false)               // true when set from chart click (skip rounding)
 
   const isRealtime = computed(() => time.value === null)
 
@@ -30,11 +29,8 @@ export const useTimelineStore = defineStore('timeline', () => {
       } else if (!sliderEndTime.value) {
         sliderEndTime.value = getRoundedNow()
       }
-      if (!_timeIsExact.value) {
-        time.value = sliderEndTime.value.add(val, 'second').unix()
-      }
+      time.value = sliderEndTime.value.add(val, 'second').unix()
     }
-    _timeIsExact.value = false
   }
 
   // Sets time programmatically (permalink restore, chart click)
@@ -44,10 +40,8 @@ export const useTimelineStore = defineStore('timeline', () => {
       day.value = null
       sliderValue.value = 0
       sliderEndTime.value = null
-      _timeIsExact.value = false
       return
     }
-    _timeIsExact.value = true
     time.value = unixTime
     const t = dayjs.unix(unixTime)
     if (t.isBefore(dayjs().subtract(1, 'day'))) {

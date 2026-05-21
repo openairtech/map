@@ -256,8 +256,6 @@ onMounted(() => {
     const lng = parseFloat(parts[1])
     const zoom = parseInt(parts[2], 10)
     if (!isNaN(lat) && !isNaN(lng) && !isNaN(zoom)) {
-      const time = parts.length >= 4 ? parseInt(parts[3], 10) : 0
-      timelineStore.setTime(time || null)
       map.setView([lat, lng], zoom)
     } else if (!restored) {
       map.setView(configStore.mapCenter, configStore.mapZoom)
