@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -18,6 +18,7 @@ import {
 import dayjs from 'dayjs'
 import { useTimelineStore } from '@/stores/timeline'
 import { useConfigStore } from '@/stores/config'
+import { useMapStore } from '@/stores/map'
 import { getMeasurements } from '@/api/openair'
 import { useAqiColors } from '@/composables/useAqiColors'
 import type { Measurement } from '@/types/api'
@@ -28,12 +29,16 @@ const props = defineProps<{ stationId: number }>()
 
 const timelineStore = useTimelineStore()
 const configStore = useConfigStore()
+const mapStore = useMapStore()
 const { getMarkerColor } = useAqiColors()
+
+const isVisible = computed(() => mapStore.popupOpened && mapStore.selectedStationId === props.stationId)
 
 const measurements = ref<Measurement[]>([])
 const lastFetchTime = ref<number | null>(null)
 
 async function fetchMeasurements() {
+  const ranges = timeRanges.value
   const anchor = timelineStore.time !== null ? dayjs.unix(timelineStore.time) : dayjs()
   const refUnix = anchor.unix()
 
@@ -43,7 +48,7 @@ async function fetchMeasurements() {
 
   lastFetchTime.value = refUnix
   const timeTo = refUnix
-  const timeFrom = anchor.subtract(configStore.chartsTimeWindow, 'hour').unix()
+  const timeFrom = ranges[0].unix()
 
   try {
     const resp = await getMeasurements(props.stationId, timeFrom, timeTo, ['aqi'])
@@ -122,8 +127,8 @@ const chartOptions = {
   }
 }
 
-onMounted(fetchMeasurements)
-watch(() => timelineStore.time, fetchMeasurements)
+watch(isVisible, (visible) => { if (visible) fetchMeasurements() })
+watch(() => timelineStore.time, () => { if (isVisible.value) fetchMeasurements() })
 </script>
 
 <style scoped>
