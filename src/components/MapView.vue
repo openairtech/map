@@ -80,8 +80,9 @@ async function updateMap() {
   cancel('update_map')
 
   try {
-    const resp = await getStations(map.getBounds(), timelineStore.time, mapStore.showAllStations)
+    const resp = await getStations(map.getBounds(), timelineStore.isRealtime ? null : timelineStore.time, mapStore.showAllStations)
     if (!resp?.stations) return
+    timelineStore.tickRealtime()
     mapStore.setStations(resp.stations)
     redrawMarkers(resp.stations)
     // Periodic refresh only in realtime mode

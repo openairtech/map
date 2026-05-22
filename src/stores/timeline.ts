@@ -6,12 +6,12 @@ export const TIMELINE_STEP = 10 * 60           // 10 minutes in seconds
 export const TIMELINE_LENGTH = 24 * 60 * 60 - TIMELINE_STEP  // 23h50m in seconds
 
 export const useTimelineStore = defineStore('timeline', () => {
-  const time = ref<number | null>(null)         // null = realtime
+  const time = ref<number>(dayjs().unix())
   const day = ref<Dayjs | null>(null)           // null = today
   const sliderValue = ref<number>(0)            // range: [-TIMELINE_LENGTH, 0]
   const sliderEndTime = ref<Dayjs | null>(null) // right edge of slider window
 
-  const isRealtime = computed(() => time.value === null)
+  const isRealtime = computed(() => !day.value && sliderValue.value === 0)
 
   function getRoundedNow(): Dayjs {
     return dayjs.unix(Math.ceil(dayjs().unix() / TIMELINE_STEP) * TIMELINE_STEP)
@@ -21,7 +21,7 @@ export const useTimelineStore = defineStore('timeline', () => {
   function onSliderChange(val: number) {
     sliderValue.value = val
     if (!day.value && val === 0) {
-      time.value = null
+      time.value = dayjs().unix()
       sliderEndTime.value = null
     } else {
       if (day.value) {
@@ -36,7 +36,7 @@ export const useTimelineStore = defineStore('timeline', () => {
   // Sets time programmatically (permalink restore, chart click)
   function setTime(unixTime: number | null) {
     if (unixTime === null) {
-      time.value = null
+      time.value = dayjs().unix()
       day.value = null
       sliderValue.value = 0
       sliderEndTime.value = null
@@ -116,8 +116,12 @@ export const useTimelineStore = defineStore('timeline', () => {
     }
   }
 
+  function tickRealtime() {
+    if (isRealtime.value) time.value = dayjs().unix()
+  }
+
   return {
     time, day, sliderValue, sliderEndTime, isRealtime,
-    setTime, stepForward, stepBackward, jumpToNow, setDay, onSliderChange, getRoundedNow
+    setTime, stepForward, stepBackward, jumpToNow, setDay, onSliderChange, getRoundedNow, tickRealtime
   }
 })

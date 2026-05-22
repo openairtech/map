@@ -24,7 +24,7 @@ export function usePermalink() {
     const c = mapStore.center
     if (!c) return ''
     let hash = `#${Math.round(c.lat * 1e5) / 1e5},${Math.round(c.lng * 1e5) / 1e5},${mapStore.zoom}z`
-    if (timelineStore.time !== null) hash += `,${timelineStore.time}t`
+    if (!timelineStore.isRealtime) hash += `,${timelineStore.time}t`
     return hash
   }
 
@@ -40,13 +40,13 @@ export function usePermalink() {
     const state = {
       center: c ? { lat: c.lat, lng: c.lng } : null,
       zoom: mapStore.zoom,
-      time: timelineStore.time
+      time: timelineStore.isRealtime ? null : timelineStore.time
     }
     window.history.pushState(state, '', hash)
   }
 
   // Watch store state and update URL
-  watch([() => mapStore.center, () => mapStore.zoom, () => timelineStore.time], updatePermalink)
+  watch([() => mapStore.center, () => mapStore.zoom, () => timelineStore.isRealtime, () => timelineStore.isRealtime ? null : timelineStore.time], updatePermalink)
 
   // Browser back/forward navigation
   window.addEventListener('popstate', (event) => {

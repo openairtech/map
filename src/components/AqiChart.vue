@@ -34,12 +34,14 @@ const { getMarkerColor } = useAqiColors()
 
 const isVisible = computed(() => mapStore.popupOpened && mapStore.selectedStationId === props.stationId)
 
+
 const measurements = ref<Measurement[]>([])
 const lastFetchTime = ref<number | null>(null)
 
 async function fetchMeasurements() {
+  const anchor = dayjs.unix(timelineStore.time)
+
   const ranges = timeRanges.value
-  const anchor = timelineStore.time !== null ? dayjs.unix(timelineStore.time) : dayjs()
   const refUnix = anchor.unix()
 
   if (lastFetchTime.value !== null) {
@@ -59,7 +61,7 @@ async function fetchMeasurements() {
 }
 
 const timeRanges = computed(() => {
-  const anchor = timelineStore.time !== null ? dayjs.unix(timelineStore.time) : dayjs()
+  const anchor = dayjs.unix(timelineStore.time)
   const ranges = []
   for (let h = configStore.chartsTimeWindow - 1; h >= 0; h--) {
     ranges.push(anchor.subtract(h, 'hour').startOf('hour'))

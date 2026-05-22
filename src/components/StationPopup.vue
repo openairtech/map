@@ -70,7 +70,7 @@ function sensorVal(key: keyof LastMeasurement): string {
 const timestampLabel = computed(() => {
   const m = lm.value
   if (m) {
-    if (timelineStore.time) {
+    if (!timelineStore.isRealtime) {
       return t('popup.timeAt', { time: dayjs.unix(m.timestamp).format('lll') })
     } else {
       return t('popup.updatedAt', { time: dayjs.unix(m.timestamp).fromNow() })
@@ -79,7 +79,7 @@ const timestampLabel = computed(() => {
   const seen = station.value?.seen
   if (seen) {
     const seenTime = dayjs.unix(seen)
-    if (!timelineStore.time || dayjs.unix(timelineStore.time).isAfter(seenTime)) {
+    if (timelineStore.isRealtime || dayjs.unix(timelineStore.time).isAfter(seenTime)) {
       return t('popup.noDataSince', { time: seenTime.format('lll') })
     }
   }
