@@ -1,6 +1,6 @@
 <template>
   <div class="aqi-chart-wrapper">
-    <Bar :data="chartData" :options="chartOptions" />
+    <Bar :key="chartKey" :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
@@ -34,7 +34,7 @@ const { getMarkerColor } = useAqiColors()
 
 const isVisible = computed(() => mapStore.popupOpened && mapStore.selectedStationId === props.stationId)
 
-
+const chartKey = ref(0)
 const measurements = ref<Measurement[]>([])
 const lastFetchTime = ref<number | null>(null)
 
@@ -129,7 +129,12 @@ const chartOptions = {
   }
 }
 
-watch(isVisible, (visible) => { if (visible) fetchMeasurements() })
+watch(isVisible, (visible) => {
+  if (visible) {
+    chartKey.value++
+    fetchMeasurements()
+  }
+})
 watch(() => timelineStore.time, () => { if (isVisible.value) fetchMeasurements() })
 </script>
 
