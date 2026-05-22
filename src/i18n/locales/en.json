@@ -30,5 +30,8 @@
   "permalink": {
     "copyTooltip": "Copy map link",
     "copiedTooltip": "Link copied!"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
   }
 }

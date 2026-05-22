@@ -21,6 +21,7 @@ import { useConfigStore } from '@/stores/config'
 import { useMapStore } from '@/stores/map'
 import { getMeasurements } from '@/api/openair'
 import { useAqiColors } from '@/composables/useAqiColors'
+import { useThemeStore } from '@/stores/theme'
 import type { Measurement } from '@/types/api'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip)
@@ -31,6 +32,7 @@ const timelineStore = useTimelineStore()
 const configStore = useConfigStore()
 const mapStore = useMapStore()
 const { getMarkerColor } = useAqiColors()
+const themeStore = useThemeStore()
 
 const isVisible = computed(() => mapStore.popupOpened && mapStore.selectedStationId === props.stationId)
 
@@ -97,37 +99,46 @@ const chartData = computed(() => ({
   }]
 }))
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    title: {
-      display: true,
-      text: 'AQI',
-      font: { size: 10 },
-      padding: { top: 2, bottom: 2 }
-    },
-    tooltip: {
-      callbacks: {
-        title: (items: { dataIndex: number }[]) => {
-          const agg = aggregated.value[items[0].dataIndex]
-          if (agg) return dayjs.unix(agg.timestamp).format('lll')
-          return timeRanges.value[items[0].dataIndex]?.format('HH:mm') ?? ''
+const chartOptions = computed(() => {
+  const tickColor = themeStore.isDark ? '#adb5bd' : '#666'
+  const gridColor = themeStore.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: 'AQI',
+        font: { size: 10 },
+        padding: { top: 2, bottom: 2 },
+        color: tickColor
+      },
+      tooltip: {
+        callbacks: {
+          title: (items: { dataIndex: number }[]) => {
+            const agg = aggregated.value[items[0].dataIndex]
+            if (agg) return dayjs.unix(agg.timestamp).format('lll')
+            return timeRanges.value[items[0].dataIndex]?.format('HH:mm') ?? ''
+          }
         }
       }
-    }
-  },
-  scales: {
-    y: { beginAtZero: true, ticks: { maxTicksLimit: 5 } }
-  },
-  onClick: (_evt: unknown, elements: { index: number }[]) => {
-    if (elements.length > 0) {
-      const m = aggregated.value[elements[0].index]
-      if (m) timelineStore.setTime(m.timestamp)
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { maxTicksLimit: 5, color: tickColor },
+        grid: { color: gridColor }
+      }
+    },
+    onClick: (_evt: unknown, elements: { index: number }[]) => {
+      if (elements.length > 0) {
+        const m = aggregated.value[elements[0].index]
+        if (m) timelineStore.setTime(m.timestamp)
+      }
     }
   }
-}
+})
 
 watch(isVisible, (visible) => {
   if (visible) {

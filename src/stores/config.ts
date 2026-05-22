@@ -8,6 +8,7 @@ export const useConfigStore = defineStore('config', () => {
   const mapRefreshPeriod = Number(import.meta.env.VITE_MAP_REFRESH_PERIOD || 30000)
   const chartsTimeWindow = Number(import.meta.env.VITE_MAP_CHARTS_TIME_WINDOW || 24)
   const chartsUpdatePeriod = Number(import.meta.env.VITE_MAP_CHARTS_UPDATE_PERIOD || 120)
+  const mapTileStyle = import.meta.env.VITE_MAP_TILE_STYLE || '3cky/ckb6j1jgm24uo1ip941iiun54'
 
-  return { apiUrl, mapboxToken, mapCenter, mapZoom, mapRefreshPeriod, chartsTimeWindow, chartsUpdatePeriod }
+  return { apiUrl, mapboxToken, mapCenter, mapZoom, mapRefreshPeriod, chartsTimeWindow, chartsUpdatePeriod, mapTileStyle }
 })

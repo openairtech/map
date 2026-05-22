@@ -226,7 +226,7 @@ onMounted(() => {
         'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
         '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
         'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-      id: '3cky/ckb6j1jgm24uo1ip941iiun54',
+      id: configStore.mapTileStyle,
       accessToken: configStore.mapboxToken
     } as L.TileLayerOptions & { id: string; accessToken: string }
   ).addTo(map)

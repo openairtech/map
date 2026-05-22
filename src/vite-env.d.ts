@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_MAP_REFRESH_PERIOD: string
   readonly VITE_MAP_CHARTS_TIME_WINDOW: string
   readonly VITE_MAP_CHARTS_UPDATE_PERIOD: string
+  readonly VITE_MAP_TILE_STYLE: string
 }
 
 interface ImportMeta {

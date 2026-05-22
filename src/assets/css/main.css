@@ -103,3 +103,98 @@ a:active i.bi { color: #0575e4; }
 .legend .red    { background-color: red; }
 .legend .purple { background-color: purple; }
 .legend .maroon { background-color: maroon; }
+
+/* Map toolbar */
+#map-toolbar {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  display: flex;
+  gap: 0.25rem;
+  background-color: #f5f5f5;
+  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: linear-gradient(top, #ffffff, #e6e6e6);
+  border: 1px solid #d4d4d4;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 2em;
+  padding: 0.25rem 0.5rem;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.35rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.toolbar-btn:hover { color: #0575e4; }
+.toolbar-btn:active i.bi { color: #0575e4; }
+
+/* =====================================================
+   Dark mode overrides
+   ===================================================== */
+
+[data-bs-theme="dark"] #timeline-controller {
+  background-color: #2b3035;
+  background-image: -webkit-linear-gradient(top, #343a40, #212529);
+  background-image: linear-gradient(top, #343a40, #212529);
+  border-color: #495057;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] #map-toolbar {
+  background-color: #2b3035;
+  background-image: -webkit-linear-gradient(top, #343a40, #212529);
+  background-image: linear-gradient(top, #343a40, #212529);
+  border-color: #495057;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .toolbar-btn { color: #dee2e6; }
+[data-bs-theme="dark"] .toolbar-btn:hover { color: #6ea8fe; }
+
+/* Calendar picker — hover/today/disabled states only */
+[data-bs-theme="dark"] .datepicker-inline td.day:hover:not(.disabled):not(.active):not(.today) { background: #343a40; }
+[data-bs-theme="dark"] .datepicker-inline td.today { background: #533f03; }
+[data-bs-theme="dark"] .datepicker-inline tfoot th.today:hover { background: #343a40; }
+[data-bs-theme="dark"] .datepicker-inline td.old,
+[data-bs-theme="dark"] .datepicker-inline td.new,
+[data-bs-theme="dark"] .datepicker-inline td.disabled { color: #6c757d; }
+[data-bs-theme="dark"] .datepicker-inline th.next.disabled { color: #6c757d; }
+
+/* Invert light tiles to produce a dark map; hue-rotate restores natural colors.
+   Applied only to the tile pane — markers, popups, and controls are unaffected. */
+[data-bs-theme="dark"] .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+
+/* Match the container background to the inverted tile land color so the gap
+   between loaded tiles is invisible while panning. */
+[data-bs-theme="dark"] .leaflet-container { background: #1c1f1a; }
+
+/* Leaflet bar controls (zoom + locate) */
+[data-bs-theme="dark"] .leaflet-bar a { background-color: #2b3035; border-bottom-color: #495057; color: #dee2e6; }
+[data-bs-theme="dark"] .leaflet-bar a:hover { background-color: #343a40; }
+[data-bs-theme="dark"] .leaflet-bar a.leaflet-disabled { color: #6c757d; }
+
+/* Locate control icon — SVG has fill="black"; invert it to white in dark mode.
+   Active (blue) and following (orange) states use colored arrows — leave them as-is. */
+[data-bs-theme="dark"] .leaflet-control-locate a .leaflet-control-locate-location-arrow,
+[data-bs-theme="dark"] .leaflet-control-locate a .leaflet-control-locate-spinner { filter: invert(1); }
+[data-bs-theme="dark"] .leaflet-control-locate.active a .leaflet-control-locate-location-arrow,
+[data-bs-theme="dark"] .leaflet-control-locate.following a .leaflet-control-locate-location-arrow { filter: none; }
+
+/* Leaflet popup */
+[data-bs-theme="dark"] .leaflet-popup-content-wrapper,
+[data-bs-theme="dark"] .leaflet-popup-tip { background: #212529; color: #dee2e6; box-shadow: 0 3px 14px rgba(0, 0, 0, 0.6); }
+[data-bs-theme="dark"] .leaflet-container a.leaflet-popup-close-button { color: #adb5bd; }
+[data-bs-theme="dark"] .leaflet-container a.leaflet-popup-close-button:hover { color: #dee2e6; }
+
+/* Leaflet attribution */
+[data-bs-theme="dark"] .leaflet-container .leaflet-control-attribution { background: rgba(33, 37, 41, 0.85); color: #adb5bd; }
+[data-bs-theme="dark"] .leaflet-control-attribution a { color: #6ea8fe; }
+
+/* @vueform/slider handle — override TimelineController's scoped !important white */
+[data-bs-theme="dark"] .slider-handle { background: #adb5bd !important; }
