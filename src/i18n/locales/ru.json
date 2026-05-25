@@ -22,7 +22,11 @@
     "noDataSince": "Нет данных с {time}"
   },
   "timeline": {
-    "now": "Сейчас"
+    "now": "Сейчас",
+    "stepBackward": "Назад на {minutes} мин",
+    "stepForward": "Вперёд на {minutes} мин",
+    "jumpToNow": "Перейти к текущему времени",
+    "calendar": "Открыть календарь"
   },
   "calendar": {
     "today": "Сегодня"

@@ -22,7 +22,11 @@
     "noDataSince": "No data since {time}"
   },
   "timeline": {
-    "now": "Now"
+    "now": "Now",
+    "stepBackward": "Back {minutes} min",
+    "stepForward": "Forward {minutes} min",
+    "jumpToNow": "Jump to now",
+    "calendar": "Open calendar"
   },
   "calendar": {
     "today": "Today"

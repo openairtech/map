@@ -20,17 +20,17 @@
     <ul class="navbar-nav">
       <li class="nav-item">
         <a id="timeline-step-backward" class="nav-link" href="#" @click.prevent="timelineStore.stepBackward()">
-          <i class="bi bi-skip-backward-fill"></i>
+          <i ref="stepBackwardRef" class="bi bi-skip-backward-fill"></i>
         </a>
       </li>
       <li class="nav-item">
         <a id="timeline-step-forward" class="nav-link" href="#" @click.prevent="timelineStore.stepForward()">
-          <i class="bi bi-skip-forward-fill"></i>
+          <i ref="stepForwardRef" class="bi bi-skip-forward-fill"></i>
         </a>
       </li>
       <li class="nav-item">
         <a id="timeline-fast-forward" class="nav-link" href="#" @click.prevent="timelineStore.jumpToNow()">
-          <i class="bi bi-fast-forward-fill"></i>
+          <i ref="jumpToNowRef" class="bi bi-fast-forward-fill"></i>
         </a>
       </li>
     </ul>
@@ -46,9 +46,9 @@
           ref="calendarToggleRef"
           class="nav-link dropdown-toggle"
           href="#"
-          @click.prevent="calendarDropdown?.toggle()"
+          @click.prevent="onCalendarToggleClick()"
         >
-          <i class="bi bi-calendar"></i>
+          <i ref="calendarIconRef" class="bi bi-calendar"></i>
         </a>
         <div ref="calendarMenuRef" class="dropdown-menu p-1">
           <CalendarPicker :model-value="day" @select="onCalendarSelect" />
@@ -89,9 +89,19 @@ const timelineStore = useTimelineStore()
 const { sliderValue: sliderPos, day, sliderEndTime } = storeToRefs(timelineStore)
 
 // --- Calendar dropdown (programmatic Bootstrap Dropdown) ---
+const calendarIconRef   = ref<HTMLElement | null>(null)
 const calendarToggleRef = ref<HTMLElement | null>(null)
 const calendarMenuRef = ref<HTMLElement | null>(null)
 let calendarDropdown: Dropdown | null = null
+
+// --- Step button tooltips ---
+const stepBackwardRef = ref<HTMLElement | null>(null)
+const stepForwardRef  = ref<HTMLElement | null>(null)
+const jumpToNowRef    = ref<HTMLElement | null>(null)
+let stepBackwardTooltip: Tooltip | null = null
+let stepForwardTooltip:  Tooltip | null = null
+let jumpToNowTooltip:    Tooltip | null = null
+let calendarTooltip:     Tooltip | null = null
 
 function onDocumentClick(e: MouseEvent) {
   const target = e.target as Node
@@ -117,6 +127,20 @@ onMounted(() => {
       title: t('permalink.copyTooltip')
     })
   }
+
+  const stepMinutes = TIMELINE_STEP / 60
+  if (stepBackwardRef.value) {
+    stepBackwardTooltip = new Tooltip(stepBackwardRef.value, { trigger: 'hover', placement: 'top', title: t('timeline.stepBackward', { minutes: stepMinutes }) })
+  }
+  if (stepForwardRef.value) {
+    stepForwardTooltip = new Tooltip(stepForwardRef.value, { trigger: 'hover', placement: 'top', title: t('timeline.stepForward', { minutes: stepMinutes }) })
+  }
+  if (jumpToNowRef.value) {
+    jumpToNowTooltip = new Tooltip(jumpToNowRef.value, { trigger: 'hover', placement: 'top', title: t('timeline.jumpToNow') })
+  }
+  if (calendarIconRef.value) {
+    calendarTooltip = new Tooltip(calendarIconRef.value, { trigger: 'hover', placement: 'top', title: t('timeline.calendar') })
+  }
 })
 
 onUnmounted(() => {
@@ -124,6 +148,10 @@ onUnmounted(() => {
   document.removeEventListener('keydown', onDocumentKeydown)
   calendarDropdown?.dispose()
   calendarDropdown = null
+  stepBackwardTooltip?.dispose(); stepBackwardTooltip = null
+  stepForwardTooltip?.dispose(); stepForwardTooltip = null
+  jumpToNowTooltip?.dispose(); jumpToNowTooltip = null
+  calendarTooltip?.dispose(); calendarTooltip = null
   if (permalinkHideTimer) clearTimeout(permalinkHideTimer)
   permalinkTooltip?.dispose()
   permalinkTooltip = null
@@ -141,6 +169,11 @@ function formatTooltip(val: number): string {
 }
 
 // --- Calendar picker ---
+function onCalendarToggleClick() {
+  calendarTooltip?.hide()
+  calendarDropdown?.toggle()
+}
+
 function onCalendarSelect(d: Dayjs | null) {
   calendarDropdown?.hide()
   timelineStore.setDay(d)
